@@ -1,32 +1,15 @@
 [package]
 name = "raw-input"
-version = "0.0.1-alpha.0"
+version = "0.0.1-alpha.1"
 edition = "2024"
 authors = ["Lete114 <me@imlete.cn>"]
-description = "A cross-platform library for capturing raw keyboard and mouse events with status-based subscriber management."
+description = "A cross-platform library for capturing and simulating global input events (keyboard and mouse)."
 
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/lete114/raw-input"
-keywords = [
-    "grab",
-    "listen",
-    "display",
-    "simulate",
-    "input",
-    "mouse",
-    "testing",
-    "keyboard",
-    "automation",
-    "intercept",
-    "hook",
-]
-categories = [
-    "development-tools::testing",
-    "api-bindings",
-    "hardware-support",
-    "automation",
-]
+keywords = ["input", "grab", "listen", "mouse", "keyboard"]
+categories = ["development-tools", "api-bindings", "hardware-support", "os"]
 
 [features]
 default = []

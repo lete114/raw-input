@@ -14,11 +14,10 @@
 
 ## 🚀 Quick Start
 
-Add this to your `Cargo.toml`:
+Install this to your `Cargo.toml`:
 
-```toml
-[dependencies]
-raw-input = "0.0.1-alpha.0"
+```bash
+cargo add raw-input
 ```
 
 ### Basic Example: Monitoring Global Input

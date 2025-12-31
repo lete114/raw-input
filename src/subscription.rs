@@ -12,7 +12,7 @@ impl SubscriptionHandle {
     /// 
     /// # Example
     /// ```no_run
-    /// // handle.pause();
+    /// handle.pause();
     /// ```
     pub fn pause(&self) {
         if let Some(mut subscriber) = CALLBACKS.get_mut(&self.id) {
@@ -24,7 +24,7 @@ impl SubscriptionHandle {
     /// 
     /// # Example
     /// ```no_run
-    /// // handle.resume();
+    /// handle.resume();
     /// ```
     pub fn resume(&self) {
         if let Some(mut subscriber) = CALLBACKS.get_mut(&self.id) {
@@ -37,7 +37,7 @@ impl SubscriptionHandle {
     /// 
     /// # Example
     /// ```no_run
-    /// // handle.unsubscribe();
+    /// handle.unsubscribe();
     /// ```
     pub fn unsubscribe(self) {
         CALLBACKS.remove(&self.id);
