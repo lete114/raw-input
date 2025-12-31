@@ -3,6 +3,8 @@
 
 **raw-input** is a lightweight, high-performance cross-platform Rust library designed to capture and simulate global input events (keyboard and mouse). It is ideal for building global hotkey managers, input monitors, automation scripts, and accessibility tools.
 
+> **Acknowledgments:** This project is inspired by [Narsil/rdev](https://github.com/Narsil/rdev) (originally by [Narsil](https://github.com/Narsil)) and its fork by [rustdesk-org/rdev](https://github.com/rustdesk-org/rdev). Standing on the shoulders of giants, `raw-input` aims to provide modern features such as status-based subscription management, alongside a more flexible and ergonomic API design for a superior developer experience.
+
 ## ✨ Features
 
 * **Global Event Listening**: Capture system-wide keyboard, mouse movement, clicks, and scroll events without requiring window focus.
