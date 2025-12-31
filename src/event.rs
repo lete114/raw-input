@@ -31,8 +31,8 @@ pub struct FloatPoint {
 /// Platform-specific key code type.
 #[cfg(not(target_os = "macos"))]
 pub type KeyCode = u32;
-#[cfg(target_os = "macos")]
-pub type KeyCode = crate::CGKeyCode;
+// #[cfg(target_os = "macos")]
+// pub type KeyCode = crate::CGKeyCode;
 
 /// Represents raw hardware scan codes or virtual key codes from different OS layers.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

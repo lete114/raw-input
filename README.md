@@ -52,6 +52,7 @@ fn main() {
     thread::sleep(Duration::from_secs(2));
     handle.resume();   // Start receiving events again
 
+    thread::sleep(Duration::from_secs(2));
     handle.unsubscribe(); // Permanently remove the listener
     Listen::stop(); // Stop Listen
     Core::stop()

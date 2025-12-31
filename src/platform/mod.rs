@@ -1,10 +1,10 @@
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "macos")]
-mod mac;
+// #[cfg(target_os = "linux")]
+// mod linux;
+// #[cfg(target_os = "macos")]
+// mod mac;
 #[cfg(target_os = "windows")]
 mod windows;
 

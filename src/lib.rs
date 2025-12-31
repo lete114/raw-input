@@ -13,24 +13,39 @@
 //! ## Example
 //! 
 //! ```no_run
-//! use raw_input::{Core, Listen, Event};
 //! use std::thread;
-//!
+//! use std::time::Duration;
+//! 
+//! use raw_input::{Core, Listen, Event};
+//! 
 //! fn main() {
-//!     // 1. Start the core engine in a background thread
+//!     // 1. Start the core engine in a background thread 
+//!     // (Crucial for processing Windows message loops)
 //!     thread::spawn(|| {
-//!         Core::start().expect("Failed to start core");
+//!         Core::start().expect("Failed to start raw-input core");
 //!     });
-//!
-//!     // 2. Listen to global events
-//!     let _handle = Listen::listen(|event| {
-//!         if let Event::KeyDown { key } = event {
-//!             println!("Key pressed: {:?}", key);
+//! 
+//!     // 2. Subscribe to global events
+//!     Listen::start();
+//!     let handle = Listen::subscribe(|event| {
+//!         match event {
+//!             Event::KeyDown { key } => println!("Key pressed: {:?}", key),
+//!             Event::MouseMove { delta } => println!("Mouse moved by: {}, {}", delta.x, delta.y),
+//!             _ => {},
 //!         }
 //!     });
-//!
-//!     // Keep the main thread alive
-//!     loop { thread::sleep(std::time::Duration::from_secs(1)); }
+//! 
+//!     // 3. Manage the subscription lifecycle
+//!     thread::sleep(Duration::from_secs(5));
+//!     handle.pause();    // Stop receiving events temporarily
+//! 
+//!     thread::sleep(Duration::from_secs(2));
+//!     handle.resume();   // Start receiving events again
+//! 
+//!     thread::sleep(Duration::from_secs(2));
+//!     handle.unsubscribe(); // Permanently remove the listener
+//!     Listen::stop(); // Stop Listen
+//!     Core::stop()
 //! }
 //! ```
 
