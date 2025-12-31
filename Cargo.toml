@@ -1,6 +1,6 @@
 [package]
 name = "raw-input"
-version = "0.0.1-alpha.1"
+version = "0.0.1-alpha.2"
 edition = "2024"
 authors = ["Lete114 <me@imlete.cn>"]
 description = "A cross-platform library for capturing and simulating global input events (keyboard and mouse)."
