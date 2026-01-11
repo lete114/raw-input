@@ -31,6 +31,17 @@ windows = { version = "0.62.2", features = [
     "Win32_UI_HiDpi",
 ] }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = { version = "0.25.0", features = ["highsierra"] }
+core-foundation = { version = "0.10.1" }
+objc2 = { version = "0.6.3" }
+objc2-foundation = { version = "0.3", default-features = false, features = [] }
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+    "objc2-core-foundation",
+    "NSGraphics",
+    "NSScreen",
+] }
+
 [dev-dependencies]
 dpi = "0.1.2"
 serial_test = "3.2.0"

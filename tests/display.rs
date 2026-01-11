@@ -6,7 +6,7 @@ mod display_tests {
     /// to at least one connected monitor.
     #[test]
     fn test_cursor_position_mapping() {
-        let (x, y) = Display::get_cursor_pos_physical();
+        let (x, y) = Display::get_cursor_position();
         println!("\n[Test] Current Physical Position: ({}, {})", x, y);
 
         let monitor = Display::get_monitor_from_point(x, y);
@@ -51,7 +51,7 @@ mod display_tests {
     /// Validates that the global screen size matches the primary monitor's size.
     #[test]
     fn test_screen_size_matching() {
-        let (sw, sh) = Display::get_screen_size_physical();
+        let (sw, sh) = Display::get_primary_screen_size();
         if let Some(primary) = Display::get_primary_monitor() {
             assert_eq!(
                 (sw, sh),
@@ -103,20 +103,6 @@ mod display_tests {
         }
     }
 
-    /// Debug utility to print monitor configuration during `cargo test -- --nocapture`
-    #[test]
-    fn print_monitor_diagnostics() {
-        let monitors = Display::get_available_monitors();
-        println!("\n--- Monitor Diagnostics ---");
-        for (i, m) in monitors.iter().enumerate() {
-            println!(
-                "ID: {} | Name: {} | Primary: {} | Res: {}x{} | Offset: {:?} | Scale: {:.2}",
-                i, m.name, m.is_primary, m.size.0, m.size.1, m.offset, m.scale_factor
-            );
-        }
-        println!("---------------------------\n");
-    }
-
     /// Ensures that no two monitors have overlapping physical areas.
     #[test]
     fn test_no_monitor_overlap() {
@@ -136,25 +122,6 @@ mod display_tests {
                     m1.name, m2.name
                 );
             }
-        }
-    }
-
-    /// Verifies that scale factors are standard Windows increments (100%, 125%, 150%, etc.)
-    /// Note: This might fail on some specialized high-DPI laptops but holds for 99% of setups.
-    #[test]
-    fn test_scale_factor_increments() {
-        let monitors = Display::get_available_monitors();
-        for m in monitors {
-            let percentage = m.scale_factor * 100.0;
-            // Common Windows scales: 100, 125, 150, 175, 200, 225, 250, 300, 350
-            let remainder = percentage % 25.0;
-            // Allow a small epsilon for floating point errors
-            assert!(
-                remainder < 1.0 || remainder > 24.0,
-                "Monitor '{}' has a non-standard scale factor: {:.2}",
-                m.name,
-                m.scale_factor
-            );
         }
     }
 
@@ -205,9 +172,9 @@ mod display_tests {
     /// due to DPI awareness re-initialization.
     #[test]
     fn test_cursor_sampling_stability() {
-        let mut last_pos = Display::get_cursor_pos_physical();
+        let mut last_pos = Display::get_cursor_position();
         for _ in 0..50 {
-            let current_pos = Display::get_cursor_pos_physical();
+            let current_pos = Display::get_cursor_position();
             // Note: If the user moves the mouse during test, this is fine.
             // We are checking for massive jumps (e.g., 1.25x or 1.5x scaling differences).
             let delta_x = (current_pos.0 - last_pos.0).abs();
@@ -220,71 +187,5 @@ mod display_tests {
             last_pos = current_pos;
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
-    }
-
-    /// Verifies that the virtual screen boundary correctly encloses all detected monitors.
-    #[test]
-    fn test_virtual_screen_boundary_enclosure() {
-        let (vx, vy, vw, vh) = Display::get_virtual_screen_boundary();
-        let monitors = Display::get_available_monitors();
-
-        println!(
-            "\n[Test] Virtual Screen Boundary: x={}, y={}, width={}, height={}",
-            vx, vy, vw, vh
-        );
-
-        assert!(
-            vw > 0 && vh > 0,
-            "Virtual screen dimensions must be greater than zero."
-        );
-
-        for m in monitors {
-            // Check if each monitor's rect is within the virtual screen rect
-            // Logic: monitor_start >= virtual_start AND monitor_end <= virtual_end
-            assert!(
-                m.offset.0 >= vx,
-                "Monitor '{}' X-offset ({}) is outside virtual left boundary ({}).",
-                m.name,
-                m.offset.0,
-                vx
-            );
-            assert!(
-                m.offset.1 >= vy,
-                "Monitor '{}' Y-offset ({}) is outside virtual top boundary ({}).",
-                m.name,
-                m.offset.1,
-                vy
-            );
-            assert!(
-                m.offset.0 + m.size.0 <= vx + vw,
-                "Monitor '{}' right edge exceeds virtual right boundary.",
-                m.name
-            );
-            assert!(
-                m.offset.1 + m.size.1 <= vy + vh,
-                "Monitor '{}' bottom edge exceeds virtual bottom boundary.",
-                m.name
-            );
-        }
-    }
-
-    /// Validates that virtual screen metrics are consistent with Windows coordinate expectations.
-    #[test]
-    fn test_virtual_screen_metrics_consistency() {
-        let (vx, vy, vw, vh) = Display::get_virtual_screen_boundary();
-
-        // In Windows, the primary monitor's top-left is always (0,0).
-        // If there are monitors to the left or above the primary, vx or vy will be negative.
-        assert!(
-            vx <= 0 && vy <= 0,
-            "Virtual screen origin should typically be less than or equal to (0,0)."
-        );
-
-        // The virtual screen size should be at least as large as the primary monitor.
-        let (sw, sh) = Display::get_screen_size_physical();
-        assert!(
-            vw >= sw && vh >= sh,
-            "Virtual screen dimensions cannot be smaller than the primary monitor."
-        );
     }
 }

@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 // #[cfg(target_os = "linux")]
 // mod linux;
-// #[cfg(target_os = "macos")]
-// mod mac;
+#[cfg(target_os = "macos")]
+mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
@@ -149,6 +149,7 @@ pub struct Display;
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct MonitorInfo {
+    pub id: u32,
     /// The OS-assigned name or identifier of the monitor.
     pub name: String,
     /// Indicates whether this is the primary monitor of the system.
