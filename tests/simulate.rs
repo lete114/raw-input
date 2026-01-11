@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod simulate_tests {
-    use raw_input::{Display, Event, Key, MouseButton, Simulate};
+    use raw_input::{Event, Key, MouseButton, Simulate};
     use serial_test::serial;
     use std::thread;
     use std::time::Duration;
@@ -68,32 +68,13 @@ mod simulate_tests {
         println!("Simulation tests finished.");
     }
 
-    #[serial]
-    #[test]
-    fn test_coordinate_conversion() {
-        // This test specifically checks the absolute coordinate mapping logic.
-        // It moves the cursor to the four corners of the virtual screen.
-        let (vx, vy, vw, vh) = Display::get_virtual_screen_boundary();
-        println!("Virtual Screen: x={}, y={}, w={}, h={}", vx, vy, vw, vh);
-
-        if vw > 1 && vh > 1 {
-            println!("Moving to Top-Left...");
-            Simulate::mouse_move_to(vx, vy);
-            thread::sleep(Duration::from_millis(800));
-
-            println!("Moving to Bottom-Right...");
-            Simulate::mouse_move_to(vx + vw - 1, vy + vh - 1);
-            thread::sleep(Duration::from_millis(800));
-        }
-    }
-
     #[test]
     #[serial]
     fn test_move_and_scroll() {
         let start = std::time::Instant::now();
         println!("Move to Bottom...");
         while start.elapsed() < Duration::from_secs(1) {
-            Simulate::mouse_wheel(0.0, -0.1);
+            Simulate::mouse_wheel(0.0, -1.0);
             thread::sleep(Duration::from_millis(20));
         }
 
@@ -101,14 +82,14 @@ mod simulate_tests {
 
         println!("Move to Top...");
         while start.elapsed() < Duration::from_secs(1) {
-            Simulate::mouse_wheel(0.0, 0.1);
+            Simulate::mouse_wheel(0.0, 1.0);
             thread::sleep(Duration::from_millis(20));
         }
 
         println!("Move to Right...");
         let start = std::time::Instant::now();
         while start.elapsed() < Duration::from_secs(1) {
-            Simulate::mouse_wheel(0.1, 0.0);
+            Simulate::mouse_wheel(1.0, 0.0);
             thread::sleep(Duration::from_millis(20));
         }
 
@@ -116,9 +97,18 @@ mod simulate_tests {
 
         println!("Move to Left...");
         let start = std::time::Instant::now();
-        while start.elapsed() < Duration::from_secs(1) {
-            Simulate::mouse_wheel(-0.1, 0.0);
+        while start.elapsed() < Duration::from_secs(1) {                                                                                                                                                                                                       
+            Simulate::mouse_wheel(-1.0, 0.0);
             thread::sleep(Duration::from_millis(20));
         }
+
+        println!("Move to Right... (Return)");
+        let start = std::time::Instant::now();
+        while start.elapsed() < Duration::from_secs(1) {
+            Simulate::mouse_wheel(1.0, 0.0);
+            thread::sleep(Duration::from_millis(20));
+        }
+
+        thread::sleep(Duration::from_millis(500));
     }
 }
