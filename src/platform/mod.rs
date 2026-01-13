@@ -63,10 +63,10 @@ pub struct Core;
 ///
 /// // It must be started first
 /// // Core::start(); // This is a blocking operation
-/// 
+///
 /// // Start listening to all input
 /// Listen::start();  // defaults to listening to all input
-/// 
+///
 /// // customizable
 /// // Listen::mouse_move(true);
 /// // Listen::mouse_wheel(true);
@@ -95,13 +95,13 @@ pub struct Listen;
 /// # Example
 /// ```no_run
 /// use raw_input::Grab;
-/// 
+///
 /// // It must be started first
 /// // Core::start(); // This is a blocking operation
 ///
 /// // Block all keyboard input
 /// Grab::start();  // defaults to blocking all input
-/// 
+///
 /// // customizable
 /// // Grab::mouse_move(true);
 /// // Grab::mouse_wheel(true);
@@ -149,7 +149,6 @@ pub struct Display;
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct MonitorInfo {
-    pub id: u32,
     /// The OS-assigned name or identifier of the monitor.
     pub name: String,
     /// Indicates whether this is the primary monitor of the system.

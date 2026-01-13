@@ -38,15 +38,15 @@ static CORE_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 
 impl Core {
     /// Starts the core engine and blocks the current thread with a Windows message loop.
-    /// 
+    ///
     /// Because this function is blocking, you should typically call it in a dedicated thread.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use std::thread;
     /// use raw_input::Core;
-    /// 
+    ///
     /// thread::spawn(|| {
     ///     if let Err(e) = Core::start() {
     ///         eprintln!("Core error: {:?}", e);
@@ -173,7 +173,7 @@ impl Core {
                 Err(err) => return Err(format!("Failed to get module handle: {:?}", err)),
             };
             let h_instance = HINSTANCE(instance.0);
-            
+
             // Register a low-level hook. 0 as the thread ID means global hook.
             let hook = SetWindowsHookExW(hook_id, Some(callback), Some(h_instance), 0);
             match hook {
@@ -218,7 +218,7 @@ impl Core {
                 0,
                 0,
                 0,
-                Some(HWND_MESSAGE), 
+                Some(HWND_MESSAGE),
                 None,
                 Some(instance.into()),
                 None,
@@ -256,7 +256,7 @@ extern "system" fn hook_event_callback(code: i32, wparam: WPARAM, lparam: LPARAM
         if !IS_GRAB_RUNNING.load(Ordering::Relaxed) {
             return unsafe { CallNextHookEx(None, code, wparam, lparam) };
         }
-        
+
         let msg = wparam.0 as u32;
         if Grab::should_block(msg) {
             // Returning LRESULT(1) consumes the event and prevents it from reaching other apps

@@ -60,8 +60,14 @@ mod simulate_tests {
         // 5. Test Event Wrapper
         // This tests the `add_event` match logic
         println!("Testing Event-based simulation (Enter key)...");
-        let enter_down = Event::KeyDown { key: Key::Return };
-        let enter_up = Event::KeyUp { key: Key::Return };
+        let enter_down = Event::KeyDown {
+            key: Key::Enter,
+            code: None,
+        };
+        let enter_up = Event::KeyUp {
+            key: Key::Enter,
+            code: None,
+        };
         Simulate::simulate(enter_down);
         Simulate::simulate(enter_up);
 
@@ -97,7 +103,7 @@ mod simulate_tests {
 
         println!("Move to Left...");
         let start = std::time::Instant::now();
-        while start.elapsed() < Duration::from_secs(1) {                                                                                                                                                                                                       
+        while start.elapsed() < Duration::from_secs(1) {
             Simulate::mouse_wheel(-1.0, 0.0);
             thread::sleep(Duration::from_millis(20));
         }

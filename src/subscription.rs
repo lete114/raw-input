@@ -1,7 +1,7 @@
 use crate::dispatcher::{CALLBACKS, Status};
 
 /// A handle that allows control over an active event subscription.
-/// 
+///
 /// It can be used to pause, resume, or permanently remove a callback.
 pub struct SubscriptionHandle {
     pub(crate) id: u64,
@@ -9,7 +9,7 @@ pub struct SubscriptionHandle {
 
 impl SubscriptionHandle {
     /// Pauses the subscription. The callback will not be executed until `resume` is called.
-    /// 
+    ///
     /// # Example
     /// ```no_run
     /// handle.pause();
@@ -21,7 +21,7 @@ impl SubscriptionHandle {
     }
 
     /// Resumes a previously paused subscription.
-    /// 
+    ///
     /// # Example
     /// ```no_run
     /// handle.resume();
@@ -32,9 +32,9 @@ impl SubscriptionHandle {
         }
     }
 
-    /// Removes the subscription from the dispatcher. 
+    /// Removes the subscription from the dispatcher.
     /// The callback will be dropped and never called again.
-    /// 
+    ///
     /// # Example
     /// ```no_run
     /// handle.unsubscribe();

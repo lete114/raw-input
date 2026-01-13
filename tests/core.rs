@@ -3,31 +3,33 @@ mod core_tests {
     use serial_test::serial;
     use std::{thread, time::Duration};
 
-    use raw_input::{Core, Display, Event, Grab, Listen, Point, Simulate};
+    use raw_input::{Core, Event, Grab, Key, Listen};
 
     #[test]
-    fn test_core() {
-        // Start core
+    fn test_input() {
         thread::spawn(|| {
             let _ = Core::start();
         });
-        thread::sleep(Duration::from_millis(500));
 
         Grab::start();
         Listen::start();
         Listen::subscribe(|event| {
-            //
             println!("event: {:?}", event);
-            println!("cursor position: {:?}", Display::get_cursor_position());
-        Simulate::simulate(Event::MouseMove {
-            delta: Point { x: 100, y: 100 },
-        });
+            match event {
+                Event::KeyUp { key, .. } => {
+                    if key == Key::Escape {
+                        println!("stop ...");
+                        std::process::exit(0);
+                    }
+                }
+                _ => {}
+            }
         });
 
-        
-        thread::sleep(Duration::from_millis(3000));
-        println!("stop ...");
-        Core::stop();
+        // thread::sleep(Duration::from_millis(5000));
+        // std::process::exit(0);
+
+        loop {}
     }
 
     /// Test the full start-to-stop lifecycle of the Core.
