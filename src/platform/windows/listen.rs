@@ -20,10 +20,13 @@ use crate::{
     Listen,
     dispatcher::{CALLBACKS, NEXT_ID, Status, Subscriber, dispatch, remove_all},
     event::{Event, FloatPoint, MouseButton, Point},
-    keycodes::windows::key_from_code,
-    platform::windows::common::{
-        IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON, LISTEN_MOUSE_MOVE,
-        LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state, utils,
+    key::KeyCode,
+    platform::windows::{
+        common::{
+            IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON,
+            LISTEN_MOUSE_MOVE, LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state, utils,
+        },
+        keycode::code_to_key,
     },
     subscription::SubscriptionHandle,
 };
@@ -190,13 +193,14 @@ impl Listen {
 
                 // Cast LPARAM to Low-Level Keyboard Hook structure
                 let kb = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
-                let code = utils::get_code(kb) as u16;
-                let key = key_from_code(code.into());
+                let code: KeyCode = utils::get_code(kb);
+                let key = code_to_key(code.into());
+                let code = Some(code);
 
                 if msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN {
-                    Event::KeyDown { key }
+                    Event::KeyDown { key, code }
                 } else {
-                    Event::KeyUp { key }
+                    Event::KeyUp { key, code }
                 }
             }
             _ => return,

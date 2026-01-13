@@ -5,11 +5,14 @@ use core_graphics::event::{CGEvent, CGEventField, CGEventType, EventField};
 use crate::{
     Listen,
     dispatcher::{CALLBACKS, NEXT_ID, Status, Subscriber, dispatch, remove_all},
-    event::{Event, FloatPoint, KeyCode, MouseButton, Point},
-    keycodes::macos::key_from_code,
-    platform::macos::common::{
-        IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON, LISTEN_MOUSE_MOVE,
-        LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state,
+    event::{Event, FloatPoint, MouseButton, Point},
+    key::KeyCode,
+    platform::macos::{
+        common::{
+            IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON,
+            LISTEN_MOUSE_MOVE, LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state,
+        },
+        keycode::code_to_key,
     },
     subscription::SubscriptionHandle,
 };
@@ -184,12 +187,13 @@ impl Listen {
                 if state & LISTEN_KEYBOARD == 0 {
                     return;
                 }
-                let code = Self::get_code(event, EventField::KEYBOARD_EVENT_KEYCODE);
-                let key = key_from_code(code as KeyCode);
+                let code = Self::get_code(event, EventField::KEYBOARD_EVENT_KEYCODE) as KeyCode;
+                let key = code_to_key(code);
+                let code = Some(code);
 
                 match event_type {
-                    CGEventType::KeyDown => Event::KeyDown { key },
-                    _ => Event::KeyUp { key },
+                    CGEventType::KeyDown => Event::KeyDown { key, code },
+                    _ => Event::KeyUp { key, code },
                 }
             }
             CGEventType::FlagsChanged => {
@@ -204,13 +208,14 @@ impl Listen {
                     return;
                 }
 
-                let code = Self::get_code(event, EventField::KEYBOARD_EVENT_KEYCODE);
-                let key = key_from_code(code as KeyCode);
+                let code = Self::get_code(event, EventField::KEYBOARD_EVENT_KEYCODE) as KeyCode;
+                let key = code_to_key(code);
+                let code = Some(code);
 
                 if new_flags & changed_bit != 0 {
-                    Event::KeyDown { key }
+                    Event::KeyDown { key, code }
                 } else {
-                    Event::KeyUp { key }
+                    Event::KeyUp { key, code }
                 }
             }
             _ => return,

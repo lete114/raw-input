@@ -9,7 +9,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, VIRTUAL_KEY,
 };
 
-use crate::{Display, Event, Key, MouseButton, Simulate, keycodes::windows::get_win_codes};
+use crate::{
+    Display, Event, Key, MouseButton, Simulate, platform::windows::keycode::get_win_codes,
+};
 
 impl Simulate {
     pub fn simulate(event: Event) {

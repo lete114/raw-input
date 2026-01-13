@@ -31,10 +31,10 @@ impl Display {
     }
 
     /// Retrieves the current cursor position in global physical coordinates.
-    /// It attempts to use `GetCursorPos` for high precision, falling back to `GetMessagePos` 
-    /// if the direct call fails. Coordinates are handled as `i16` to correctly 
+    /// It attempts to use `GetCursorPos` for high precision, falling back to `GetMessagePos`
+    /// if the direct call fails. Coordinates are handled as `i16` to correctly
     /// interpret negative values in multi-monitor setups.
-    pub fn get_cursor_pos_physical() -> (i32, i32) {
+    pub fn get_cursor_position() -> (i32, i32) {
         initialize_dpi_awareness();
         let mut pt = POINT::default();
         unsafe {
@@ -52,7 +52,7 @@ impl Display {
     }
 
     /// Gets the physical resolution (width, height) of the primary screen.
-    pub fn get_screen_size_physical() -> (i32, i32) {
+    pub fn get_primary_screen_size() -> (i32, i32) {
         initialize_dpi_awareness();
         unsafe { (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)) }
     }
@@ -94,7 +94,7 @@ impl Display {
 
     /// Finds the monitor that currently contains the mouse cursor.
     pub fn get_current_monitor() -> Option<MonitorInfo> {
-        let (x, y) = Self::get_cursor_pos_physical();
+        let (x, y) = Self::get_cursor_position();
         Self::get_monitor_from_point(x, y)
     }
 

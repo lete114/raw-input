@@ -1,4 +1,4 @@
-use crate::keycodes::macos::code_from_key;
+use crate::platform::macos::keycode::key_to_code;
 use crate::{Event, Key, MouseButton, Simulate};
 use core_graphics::event::{CGEvent, CGEventType, CGKeyCode, CGMouseButton, ScrollEventUnit};
 use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
@@ -84,7 +84,7 @@ impl Simulate {
     pub fn keyboard(key: Key, down: bool) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
 
-        let key_code = match code_from_key(key) {
+        let key_code = match key_to_code(key) {
             Some(code) => code as CGKeyCode,
             None => return,
         };

@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::sync::atomic::Ordering;
 
 use core_foundation::runloop::kCFRunLoopCommonModes;
@@ -14,6 +15,8 @@ use crate::{
     Grab, Listen,
     platform::{Core, CoreError},
 };
+
+static CORE_RUN_LOOP: Mutex<Option<CFRunLoop>> = Mutex::new(None);
 
 impl Core {
     pub fn start() -> Result<(), CoreError> {
@@ -79,17 +82,28 @@ impl Core {
 
         let run_loop = CFRunLoop::get_current();
         run_loop.add_source(&run_loop_source, unsafe { kCFRunLoopCommonModes });
+        {
+            let mut guard = CORE_RUN_LOOP.lock().unwrap();
+            *guard = Some(run_loop.clone());
+        }
 
         tap.enable();
 
         unsafe { CFRunLoopRun() };
+
+        {
+            let mut guard = CORE_RUN_LOOP.lock().unwrap();
+            *guard = None;
+        }
 
         Ok(())
     }
 
     /// Safely removes a hook and resets the atomic pointer.
     fn unhook() {
-        CFRunLoop::get_current().stop();
+        if let Some(rl) = CORE_RUN_LOOP.lock().unwrap().as_ref() {
+            rl.stop();
+        }
     }
 }
 

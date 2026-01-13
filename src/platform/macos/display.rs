@@ -48,7 +48,6 @@ impl Display {
                 let scale_factor = Self::match_scale_factor(display_id, &all_screens);
 
                 monitors.push(MonitorInfo {
-                    id: display_id,
                     name: format!("Monitor #{}", display.model_number()),
                     is_primary: display_id == main_id,
                     offset: (bounds.origin.x as i32, bounds.origin.y as i32),
