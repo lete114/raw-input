@@ -1,3 +1,6 @@
+#[cfg(feature = "serialize")]
+use serde::{Deserialize, Serialize};
+
 /// Platform raw key code (OS-dependent numeric value)
 pub type KeyCode = u32;
 
