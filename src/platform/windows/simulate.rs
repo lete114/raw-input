@@ -18,11 +18,11 @@ impl Simulate {
         InputBuilder::new().add_event(event).send();
     }
 
-    pub fn mouse_move(dx: i32, dy: i32) {
+    pub fn mouse_move(dx: f64, dy: f64) {
         InputBuilder::new().add_mouse_move(dx, dy).send();
     }
 
-    pub fn mouse_move_to(x: i32, y: i32) {
+    pub fn mouse_move_to(x: f64, y: f64) {
         InputBuilder::new().add_mouse_move_to(x, y).send();
     }
 
@@ -57,10 +57,10 @@ impl InputBuilder {
         }
     }
 
-    fn add_mouse_move(mut self, dx: i32, dy: i32) -> Self {
+    fn add_mouse_move(mut self, dx: f64, dy: f64) -> Self {
         self.push_mouse(MOUSEINPUT {
-            dx,
-            dy,
+            dx: dx as i32,
+            dy: dy as i32,
             dwFlags: MOUSEEVENTF_MOVE,
             ..Default::default()
         });
@@ -68,7 +68,7 @@ impl InputBuilder {
     }
 
     /// Adds absolute mouse movement.
-    fn add_mouse_move_to(mut self, x: i32, y: i32) -> Self {
+    fn add_mouse_move_to(mut self, x: f64, y: f64) -> Self {
         // Get the boundary of the entire virtual desktop (multi-monitor support).
         let (vx, vy, vw, vh) = Display::get_virtual_screen_boundary();
 
@@ -76,10 +76,16 @@ impl InputBuilder {
             return self;
         }
 
-        // Convert pixel coordinates to the Windows normalized coordinate system (0 to 65535).
-        // The formula includes a half-pixel offset for better precision.
-        let dx = (((x - vx) as i64 * 65535) / (vw - 1) as i64) as i32;
-        let dy = (((y - vy) as i64 * 65535) / (vh - 1) as i64) as i32;
+        let scale_factor = Display::get_scale_factor();
+
+        let phys_x = x * scale_factor;
+        let phys_y = y * scale_factor;
+
+        // Normalized mapping logic:
+        // Coordinate mapping formula for SendInput: (physical coordinates - start offset) * 65535 / (total size - 1)
+        // Use f64 calculations to prevent overflow or loss of precision in intermediate steps.
+        let dx = ((phys_x - vx as f64) * 65535.0 / (vw - 1) as f64) as i32;
+        let dy = ((phys_y - vy as f64) * 65535.0 / (vh - 1) as f64) as i32;
 
         self.push_mouse(MOUSEINPUT {
             dx,

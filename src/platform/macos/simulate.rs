@@ -15,19 +15,19 @@ impl Simulate {
         }
     }
 
-    pub fn mouse_move(dx: i32, dy: i32) {
+    pub fn mouse_move(dx: f64, dy: f64) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
         if let Ok(event) = CGEvent::new(source) {
             let cur_pos = event.location();
-            let new_x = cur_pos.x + dx as f64;
-            let new_y = cur_pos.y + dy as f64;
-            Self::mouse_move_to(new_x as i32, new_y as i32);
+            let new_x = cur_pos.x + dx;
+            let new_y = cur_pos.y + dy;
+            Self::mouse_move_to(new_x, new_y);
         }
     }
 
-    pub fn mouse_move_to(x: i32, y: i32) {
+    pub fn mouse_move_to(x: f64, y: f64) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
-        let pos = core_graphics::geometry::CGPoint::new(x as f64, y as f64);
+        let pos = core_graphics::geometry::CGPoint::new(x, y);
 
         if let Ok(event) = CGEvent::new_mouse_event(
             source,

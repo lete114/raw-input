@@ -39,7 +39,7 @@ mod simulate_tests {
         // 3. Test Mouse Button & Movement
         // Move to a specific location and perform a right-click
         println!("Moving to (200, 200) and right-clicking...");
-        Simulate::mouse_move_to(200, 200);
+        Simulate::mouse_move_to(200.0, 200.0);
         wait();
         Simulate::mouse_button(MouseButton::Right, true);
         Simulate::mouse_button(MouseButton::Right, false);
@@ -48,13 +48,13 @@ mod simulate_tests {
         // 4. Test Mouse Relative Movement
         // Jiggle the mouse cursor
         println!("Jiggling mouse relative...");
-        Simulate::mouse_move(50, 0);
+        Simulate::mouse_move(50.0, 0.0);
         thread::sleep(Duration::from_millis(100));
-        Simulate::mouse_move(0, 50);
+        Simulate::mouse_move(0.0, 50.0);
         thread::sleep(Duration::from_millis(100));
-        Simulate::mouse_move(-50, 0);
+        Simulate::mouse_move(-50.0, 0.0);
         thread::sleep(Duration::from_millis(100));
-        Simulate::mouse_move(0, -50);
+        Simulate::mouse_move(0.0, -50.0);
         wait();
 
         // 5. Test Event Wrapper

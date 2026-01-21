@@ -19,7 +19,7 @@ use windows::Win32::{
 use crate::{
     Listen,
     dispatcher::{CALLBACKS, NEXT_ID, Status, Subscriber, dispatch, remove_all},
-    event::{Event, FloatPoint, MouseButton, Point},
+    event::{Event, MouseButton, Point},
     key::KeyCode,
     platform::windows::{
         common::{
@@ -157,14 +157,14 @@ impl Listen {
                         // Normalize vertical wheel delta
                         let y = delta as i16 as f64 / WHEEL_DELTA as f64;
                         Event::MouseWheel {
-                            delta: FloatPoint { x: 0.0, y },
+                            delta: Point { x: 0.0, y },
                         }
                     }
                     WM_MOUSEHWHEEL => {
                         // Normalize horizontal wheel delta
                         let x = delta as i16 as f64 / WHEEL_DELTA as f64;
                         Event::MouseWheel {
-                            delta: FloatPoint { x, y: 0.0 },
+                            delta: Point { x, y: 0.0 },
                         }
                     }
 
@@ -250,10 +250,10 @@ impl Listen {
             return true;
         }
 
-        let dx = mouse.lLastX;
-        let dy = mouse.lLastY;
+        let dx = mouse.lLastX as f64;
+        let dy = mouse.lLastY as f64;
 
-        if dx != 0 || dy != 0 {
+        if dx != 0.0 || dy != 0.0 {
             dispatch(Event::MouseMove {
                 delta: Point { x: dx, y: dy },
             });

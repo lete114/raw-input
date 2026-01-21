@@ -15,17 +15,9 @@ pub enum MouseButton {
 }
 
 /// A simple coordinate point using integers, typically for pixel positions.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
-}
-
-/// A coordinate point using floating-point numbers, used for precise deltas or scaling.
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-pub struct FloatPoint {
+pub struct Point {
     pub x: f64,
     pub y: f64,
 }
@@ -46,13 +38,9 @@ pub struct FloatPoint {
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum Event {
-    /// Mouse movement with pixel delta.
     MouseMove { delta: Point },
-    /// Mouse wheel rotation with floating point precision.
-    MouseWheel { delta: FloatPoint },
-    /// Mouse button press.
+    MouseWheel { delta: Point },
     MouseDown { button: MouseButton },
-    /// Mouse button release.
     MouseUp { button: MouseButton },
     /// Keyboard key press.
     ///

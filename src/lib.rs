@@ -55,7 +55,7 @@ mod key;
 mod platform;
 mod subscription;
 
-pub use crate::event::{Event, FloatPoint, MouseButton, Point};
+pub use crate::event::{Event, MouseButton, Point};
 pub use crate::key::{Key, KeyCode};
 pub use crate::platform::MonitorInfo;
 pub use crate::subscription::SubscriptionHandle;

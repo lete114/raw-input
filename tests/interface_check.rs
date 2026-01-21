@@ -48,19 +48,19 @@ mod interface_checks {
     #[test]
     fn check_display() {
         let _: fn() -> f64 = Display::get_scale_factor;
-        let _: fn() -> (i32, i32) = Display::get_cursor_position;
-        let _: fn() -> (i32, i32) = Display::get_primary_screen_size;
+        let _: fn() -> Option<(f64, f64)> = Display::get_cursor_position;
+        let _: fn() -> (f64, f64) = Display::get_primary_screen_size;
         let _: fn() -> Vec<raw_input::MonitorInfo> = Display::get_available_monitors;
         let _: fn() -> Option<raw_input::MonitorInfo> = Display::get_primary_monitor;
         let _: fn() -> Option<raw_input::MonitorInfo> = Display::get_current_monitor;
-        let _: fn(i32, i32) -> Option<raw_input::MonitorInfo> = Display::get_monitor_from_point;
+        let _: fn(f64, f64) -> Option<raw_input::MonitorInfo> = Display::get_monitor_from_point;
     }
 
     #[test]
     fn check_simulate() {
         let _: fn(Event) = Simulate::simulate;
-        let _: fn(i32, i32) = Simulate::mouse_move;
-        let _: fn(i32, i32) = Simulate::mouse_move_to;
+        let _: fn(f64, f64) = Simulate::mouse_move;
+        let _: fn(f64, f64) = Simulate::mouse_move_to;
         let _: fn(f64, f64) = Simulate::mouse_wheel;
         let _: fn(MouseButton, bool) = Simulate::mouse_button;
         let _: fn(Key, bool) = Simulate::keyboard;

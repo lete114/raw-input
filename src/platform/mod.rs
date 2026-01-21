@@ -154,21 +154,21 @@ pub struct MonitorInfo {
     /// Indicates whether this is the primary monitor of the system.
     pub is_primary: bool,
     /// The starting coordinates (x, y) of the monitor in the global physical coordinate system.
-    pub offset: (i32, i32),
+    pub offset: (f64, f64),
     /// The physical resolution (width, height) of the monitor in pixels.
-    pub size: (i32, i32),
+    pub size: (f64, f64),
     /// The UI scale factor (e.g., 1.0, 1.5, 2.0) for High-DPI support.
     pub scale_factor: f64,
 }
 
 impl MonitorInfo {
     /// Returns the width of the monitor.
-    pub fn width(&self) -> i32 {
+    pub fn width(&self) -> f64 {
         self.size.0
     }
 
     /// Returns the height of the monitor.
-    pub fn height(&self) -> i32 {
+    pub fn height(&self) -> f64 {
         self.size.1
     }
 }
