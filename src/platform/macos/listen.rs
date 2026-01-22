@@ -5,7 +5,7 @@ use core_graphics::event::{CGEvent, CGEventField, CGEventType, EventField};
 use crate::{
     Listen,
     dispatcher::{CALLBACKS, NEXT_ID, Status, Subscriber, dispatch, remove_all},
-    event::{Event, FloatPoint, MouseButton, Point},
+    event::{Event, MouseButton, Point},
     key::KeyCode,
     platform::macos::{
         common::{
@@ -117,8 +117,8 @@ impl Listen {
                 if dx != 0 || dy != 0 {
                     Event::MouseMove {
                         delta: Point {
-                            x: dx as i32,
-                            y: dy as i32,
+                            x: dx as f64,
+                            y: dy as f64,
                         },
                     }
                 } else {
@@ -177,7 +177,7 @@ impl Listen {
                 let dx = Self::get_code(event, EventField::SCROLL_WHEEL_EVENT_DELTA_AXIS_2);
 
                 Event::MouseWheel {
-                    delta: FloatPoint {
+                    delta: Point {
                         x: dx as f64,
                         y: dy as f64,
                     },

@@ -6,7 +6,7 @@ mod display_tests {
     /// to at least one connected monitor.
     #[test]
     fn test_cursor_position_mapping() {
-        let (x, y) = Display::get_cursor_position();
+        let (x, y) = Display::get_cursor_position().unwrap();
         println!("\n[Test] Current Physical Position: ({}, {})", x, y);
 
         let monitor = Display::get_monitor_from_point(x, y);
@@ -43,7 +43,7 @@ mod display_tests {
         assert!(primary.is_primary);
         assert_eq!(
             primary.offset,
-            (0, 0),
+            (0.0, 0.0),
             "The primary monitor origin should typically be (0, 0)."
         );
     }
@@ -69,10 +69,10 @@ mod display_tests {
         for m in monitors {
             // Test the 4 corners of the monitor rectangle
             let corners = [
-                (m.offset.0, m.offset.1),                               // Top-Left
-                (m.offset.0 + m.size.0 - 1, m.offset.1),                // Top-Right
-                (m.offset.0, m.offset.1 + m.size.1 - 1),                // Bottom-Left
-                (m.offset.0 + m.size.0 - 1, m.offset.1 + m.size.1 - 1), // Bottom-Right
+                (m.offset.0, m.offset.1),                                   // Top-Left
+                (m.offset.0 + m.size.0 - 1.0, m.offset.1),                  // Top-Right
+                (m.offset.0, m.offset.1 + m.size.1 - 1.0),                  // Bottom-Left
+                (m.offset.0 + m.size.0 - 1.0, m.offset.1 + m.size.1 - 1.0), // Bottom-Right
             ];
 
             for (cx, cy) in corners {
@@ -137,9 +137,9 @@ mod display_tests {
         for m in &monitors {
             // Check points 1 pixel outside each edge
             let probe_points = [
-                (m.offset.0 - 1, m.offset.1),        // Left
+                (m.offset.0 - 1.0, m.offset.1),        // Left
                 (m.offset.0 + m.size.0, m.offset.1), // Right
-                (m.offset.0, m.offset.1 - 1),        // Top
+                (m.offset.0, m.offset.1 - 1.0),        // Top
                 (m.offset.0, m.offset.1 + m.size.1), // Bottom
             ];
 
@@ -172,16 +172,16 @@ mod display_tests {
     /// due to DPI awareness re-initialization.
     #[test]
     fn test_cursor_sampling_stability() {
-        let mut last_pos = Display::get_cursor_position();
+        let mut last_pos = Display::get_cursor_position().unwrap();
         for _ in 0..50 {
-            let current_pos = Display::get_cursor_position();
+            let current_pos = Display::get_cursor_position().unwrap();
             // Note: If the user moves the mouse during test, this is fine.
             // We are checking for massive jumps (e.g., 1.25x or 1.5x scaling differences).
             let delta_x = (current_pos.0 - last_pos.0).abs();
             let delta_y = (current_pos.1 - last_pos.1).abs();
 
             assert!(
-                delta_x < 500 && delta_y < 500,
+                delta_x < 500.0 && delta_y < 500.0,
                 "Large cursor jump detected. DPI awareness may be unstable."
             );
             last_pos = current_pos;

@@ -17,20 +17,20 @@ impl Display {
         Self::match_scale_factor(CGDisplay::main().id, &screens)
     }
 
-    pub fn get_cursor_position() -> (i32, i32) {
+    pub fn get_cursor_position() -> Option<(f64, f64)> {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
         if let Ok(event) = CGEvent::new(source) {
             let point = event.location();
-            (point.x as i32, point.y as i32)
+            Some((point.x as f64, point.y as f64))
         } else {
-            (0, 0)
+            None
         }
     }
 
-    pub fn get_primary_screen_size() -> (i32, i32) {
+    pub fn get_primary_screen_size() -> (f64, f64) {
         let display = CGDisplay::main();
         let bounds = display.bounds();
-        (bounds.size.width as i32, bounds.size.height as i32)
+        (bounds.size.width, bounds.size.height)
     }
 
     pub fn get_available_monitors() -> Vec<MonitorInfo> {
@@ -50,8 +50,8 @@ impl Display {
                 monitors.push(MonitorInfo {
                     name: format!("Monitor #{}", display.model_number()),
                     is_primary: display_id == main_id,
-                    offset: (bounds.origin.x as i32, bounds.origin.y as i32),
-                    size: (bounds.size.width as i32, bounds.size.height as i32),
+                    offset: (bounds.origin.x, bounds.origin.y),
+                    size: (bounds.size.width, bounds.size.height),
                     scale_factor,
                 });
             }
@@ -66,16 +66,17 @@ impl Display {
     }
 
     pub fn get_current_monitor() -> Option<MonitorInfo> {
-        let (x, y) = Self::get_cursor_position();
-        Self::get_monitor_from_point(x, y)
+        Self::get_cursor_position()
+            .map(|(x, y)| Self::get_monitor_from_point(x, y))
+            .unwrap_or(None)
     }
 
-    pub fn get_monitor_from_point(x: i32, y: i32) -> Option<MonitorInfo> {
+    pub fn get_monitor_from_point(x: f64, y: f64) -> Option<MonitorInfo> {
         Self::get_available_monitors().into_iter().find(|m| {
-            x >= m.offset.0
-                && x < m.offset.0 + m.size.0
-                && y >= m.offset.1
-                && y < m.offset.1 + m.size.1
+            x >= m.offset.0 as f64
+                && x < m.offset.0 as f64 + m.size.0 as f64
+                && y >= m.offset.1 as f64
+                && y < m.offset.1 as f64 + m.size.1 as f64
         })
     }
 
