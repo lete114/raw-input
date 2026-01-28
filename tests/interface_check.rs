@@ -50,6 +50,8 @@ mod interface_checks {
         let _: fn() -> f64 = Display::get_scale_factor;
         let _: fn() -> Option<(f64, f64)> = Display::get_cursor_position;
         let _: fn() -> (f64, f64) = Display::get_primary_screen_size;
+        let _: fn() -> (f64, f64) = Display::get_virtual_screen_size;
+        let _: fn() -> (f64, f64, f64, f64) = Display::get_virtual_screen_bounds;
         let _: fn() -> Vec<raw_input::MonitorInfo> = Display::get_available_monitors;
         let _: fn() -> Option<raw_input::MonitorInfo> = Display::get_primary_monitor;
         let _: fn() -> Option<raw_input::MonitorInfo> = Display::get_current_monitor;

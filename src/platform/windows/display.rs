@@ -1,33 +1,66 @@
-use std::mem::size_of;
+use std::{mem::size_of, sync::Once};
 
 use windows::{
     Win32::{
         Foundation::{LPARAM, POINT, RECT},
-        Graphics::Gdi::{EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFOEXW},
+        Graphics::Gdi::{
+            EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITOR_DEFAULTTONEAREST,
+            MONITORINFOEXW, MonitorFromPoint,
+        },
         UI::{
-            HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI},
+            HiDpi::{
+                DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, GetDpiForMonitor, MDT_EFFECTIVE_DPI,
+                SetProcessDpiAwarenessContext,
+            },
             WindowsAndMessaging::{
-                GetCursorPos, GetSystemMetrics, SM_CXSCREEN, SM_CXVIRTUALSCREEN,
-                SM_CYSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN,
+                GetCursorPos, GetSystemMetrics, MONITORINFOF_PRIMARY, SM_CXSCREEN,
+                SM_CXVIRTUALSCREEN, SM_CYSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN,
+                SM_YVIRTUALSCREEN, USER_DEFAULT_SCREEN_DPI,
             },
         },
     },
     core::BOOL,
 };
 
-use crate::{
-    Display,
-    platform::{MonitorInfo, windows::common::initialize_dpi_awareness},
-};
+use crate::{Display, platform::MonitorInfo};
 
+/// Initializes DPI awareness for the process to ensure coordinates are handled correctly
+/// on high-resolution displays. This is called only once.
+static DPI_INIT: Once = Once::new();
+
+// private functions
+impl Display {
+    fn ensure_dpi_awareness() {
+        DPI_INIT.call_once(|| unsafe {
+            // Set awareness to Per-Monitor V2 for modern Windows 10/11 behavior
+            let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        });
+    }
+
+    fn get_scale_for_hmonitor(h_monitor: HMONITOR) -> f64 {
+        let mut dpi_x: u32 = 0;
+        let mut dpi_y: u32 = 0;
+        unsafe {
+            let _ = GetDpiForMonitor(h_monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y);
+        }
+        if dpi_x == 0 {
+            1.0
+        } else {
+            dpi_x as f64 / USER_DEFAULT_SCREEN_DPI as f64
+        }
+    }
+}
+
+// public functions
 impl Display {
     /// Returns the UI scale factor of the primary monitor.
     /// This is a convenience method that references the primary monitor's DPI settings.
     pub fn get_scale_factor() -> f64 {
-        initialize_dpi_awareness();
-        Self::get_primary_monitor()
-            .map(|m| m.scale_factor)
-            .unwrap_or(1.0)
+        Self::ensure_dpi_awareness();
+        unsafe {
+            let h_monitor = MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTONEAREST);
+            Self::get_scale_for_hmonitor(h_monitor)
+        }
     }
 
     /// Retrieves the current cursor position in global physical coordinates.
@@ -35,11 +68,11 @@ impl Display {
     /// if the direct call fails. Coordinates are handled as `i16` to correctly
     /// interpret negative values in multi-monitor setups.
     pub fn get_cursor_position() -> Option<(f64, f64)> {
-        initialize_dpi_awareness();
+        Self::ensure_dpi_awareness();
         let mut pt = POINT::default();
         unsafe {
             if GetCursorPos(&mut pt).is_ok() {
-                Self::physical_to_logical(pt.x, pt.y)
+                Some((pt.x as f64, pt.y as f64))
             } else {
                 None
             }
@@ -48,7 +81,7 @@ impl Display {
 
     /// Gets the physical resolution (width, height) of the primary screen.
     pub fn get_primary_screen_size() -> (f64, f64) {
-        initialize_dpi_awareness();
+        Self::ensure_dpi_awareness();
         unsafe {
             (
                 GetSystemMetrics(SM_CXSCREEN) as f64,
@@ -57,26 +90,31 @@ impl Display {
         }
     }
 
+    pub fn get_virtual_screen_size() -> (f64, f64) {
+        let (_, _, w, h) = Self::get_virtual_screen_bounds();
+        (w as f64, h as f64)
+    }
+
     /// Returns the virtual screen boundary across all monitors.
-    /// Results are returned as a tuple of (left, top, width, height).
-    pub(crate) fn get_virtual_screen_boundary() -> (i32, i32, i32, i32) {
-        initialize_dpi_awareness();
+    /// (x, y, width, height) in logical units
+    pub fn get_virtual_screen_bounds() -> (f64, f64, f64, f64) {
+        Self::ensure_dpi_awareness();
         unsafe {
-            let vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-            let vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-            let vw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-            let vh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+            let vx = GetSystemMetrics(SM_XVIRTUALSCREEN) as f64;
+            let vy = GetSystemMetrics(SM_YVIRTUALSCREEN) as f64;
+            let vw = GetSystemMetrics(SM_CXVIRTUALSCREEN) as f64;
+            let vh = GetSystemMetrics(SM_CYVIRTUALSCREEN) as f64;
             (vx, vy, vw, vh)
         }
     }
 
     /// Enumerates all connected monitors and retrieves their physical properties.
     pub fn get_available_monitors() -> Vec<MonitorInfo> {
-        initialize_dpi_awareness();
+        Self::ensure_dpi_awareness();
         let mut monitors = Vec::new();
         unsafe {
             let _ = EnumDisplayMonitors(
-                Some(HDC::default()),
+                None,
                 None,
                 Some(monitor_enum_proc),
                 LPARAM(&mut monitors as *mut _ as isize),
@@ -108,12 +146,6 @@ impl Display {
                 && y < m.offset.1 as f64 + m.size.1 as f64
         })
     }
-
-    fn physical_to_logical(x: i32, y: i32) -> Option<(f64, f64)> {
-        let scale_factor = Self::get_scale_factor();
-
-        Some((x as f64 / scale_factor, y as f64 / scale_factor))
-    }
 }
 
 /// Windows GDI callback function used to process each monitor during enumeration.
@@ -136,20 +168,16 @@ extern "system" fn monitor_enum_proc(
                 .trim_matches(char::from(0))
                 .to_string();
 
-            let mut dpi_x: u32 = 0;
-            let mut dpi_y: u32 = 0;
-            // Fetch effective DPI for the specific monitor to calculate scale factor.
-            let _ = GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y);
-
             let offset = (r.left as f64, r.top as f64);
             let size = ((r.right - r.left) as f64, (r.bottom - r.top) as f64);
+
+            let scale_factor = Display::get_scale_for_hmonitor(hmonitor);
             monitors.push(MonitorInfo {
                 name,
-                is_primary: (info.monitorInfo.dwFlags & 1) != 0,
+                is_primary: (info.monitorInfo.dwFlags & MONITORINFOF_PRIMARY) != 0,
                 offset,
                 size,
-                // Windows standard DPI is 96.
-                scale_factor: dpi_x as f64 / 96.0,
+                scale_factor,
             });
         }
     };

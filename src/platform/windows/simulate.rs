@@ -70,9 +70,9 @@ impl InputBuilder {
     /// Adds absolute mouse movement.
     fn add_mouse_move_to(mut self, x: f64, y: f64) -> Self {
         // Get the boundary of the entire virtual desktop (multi-monitor support).
-        let (vx, vy, vw, vh) = Display::get_virtual_screen_boundary();
+        let (vx, vy, vw, vh) = Display::get_virtual_screen_bounds();
 
-        if vw <= 1 || vh <= 1 {
+        if vw <= 1.0 || vh <= 1.0 {
             return self;
         }
 
@@ -84,8 +84,8 @@ impl InputBuilder {
         // Normalized mapping logic:
         // Coordinate mapping formula for SendInput: (physical coordinates - start offset) * 65535 / (total size - 1)
         // Use f64 calculations to prevent overflow or loss of precision in intermediate steps.
-        let dx = ((phys_x - vx as f64) * 65535.0 / (vw - 1) as f64) as i32;
-        let dy = ((phys_y - vy as f64) * 65535.0 / (vh - 1) as f64) as i32;
+        let dx = ((phys_x - vx) * 65535.0 / vw - 1.0) as i32;
+        let dy = ((phys_y - vy) * 65535.0 / vh - 1.0) as i32;
 
         self.push_mouse(MOUSEINPUT {
             dx,

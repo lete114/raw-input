@@ -1,14 +1,7 @@
 use std::{
     ffi::c_void,
     ptr::null_mut,
-    sync::{
-        Once,
-        atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
-    },
-};
-
-use windows::Win32::UI::HiDpi::{
-    DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext,
+    sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
 };
 
 // --- Global Runtime States ---
@@ -63,16 +56,6 @@ pub fn update_state(atomic: &AtomicU32, bit: u32, enable: bool) {
             Err(actual) => current = actual, // Update current value and retry
         }
     }
-}
-
-/// Initializes DPI awareness for the process to ensure coordinates are handled correctly
-/// on high-resolution displays. This is called only once.
-static DPI_INIT: Once = Once::new();
-pub fn initialize_dpi_awareness() {
-    DPI_INIT.call_once(|| unsafe {
-        // Set awareness to Per-Monitor V2 for modern Windows 10/11 behavior
-        let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    });
 }
 
 pub mod utils {
