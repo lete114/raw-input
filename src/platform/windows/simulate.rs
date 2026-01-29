@@ -10,31 +10,35 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 
 use crate::{
-    Display, Event, Key, MouseButton, Simulate, platform::windows::keycode::get_win_codes,
+    Event, Key, MouseButton,
+    platform::{
+        DisplayImpl, PlatformDisplay, PlatformSimulate, SimulateImpl,
+        windows::keycode::get_win_codes,
+    },
 };
 
-impl Simulate {
-    pub fn simulate(event: Event) {
+impl SimulateImpl for PlatformSimulate {
+    fn simulate(event: Event) {
         InputBuilder::new().add_event(event).send();
     }
 
-    pub fn mouse_move(dx: f64, dy: f64) {
+    fn mouse_move(dx: f64, dy: f64) {
         InputBuilder::new().add_mouse_move(dx, dy).send();
     }
 
-    pub fn mouse_move_to(x: f64, y: f64) {
+    fn mouse_move_to(x: f64, y: f64) {
         InputBuilder::new().add_mouse_move_to(x, y).send();
     }
 
-    pub fn mouse_wheel(dx: f64, dy: f64) {
+    fn mouse_wheel(dx: f64, dy: f64) {
         InputBuilder::new().add_mouse_wheel(dx, dy).send();
     }
 
-    pub fn mouse_button(button: MouseButton, down: bool) {
+    fn mouse_button(button: MouseButton, down: bool) {
         InputBuilder::new().add_mouse_button(button, down).send();
     }
 
-    pub fn keyboard(key: Key, down: bool) {
+    fn keyboard(key: Key, down: bool) {
         InputBuilder::new().add_keyboard(key, down).send();
     }
 }
@@ -70,13 +74,13 @@ impl InputBuilder {
     /// Adds absolute mouse movement.
     fn add_mouse_move_to(mut self, x: f64, y: f64) -> Self {
         // Get the boundary of the entire virtual desktop (multi-monitor support).
-        let (vx, vy, vw, vh) = Display::get_virtual_screen_bounds();
+        let (vx, vy, vw, vh) = PlatformDisplay::get_virtual_screen_bounds();
 
         if vw <= 1.0 || vh <= 1.0 {
             return self;
         }
 
-        let scale_factor = Display::get_scale_factor();
+        let scale_factor = PlatformDisplay::get_scale_factor();
 
         let phys_x = x * scale_factor;
         let phys_y = y * scale_factor;

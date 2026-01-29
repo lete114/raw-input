@@ -22,14 +22,111 @@ use windows::{
     core::BOOL,
 };
 
-use crate::{Display, platform::MonitorInfo};
+use crate::platform::{DisplayImpl, MonitorInfo, PlatformDisplay};
 
 /// Initializes DPI awareness for the process to ensure coordinates are handled correctly
 /// on high-resolution displays. This is called only once.
 static DPI_INIT: Once = Once::new();
 
+// public functions
+impl DisplayImpl for PlatformDisplay {
+    /// Returns the UI scale factor of the primary monitor.
+    /// This is a convenience method that references the primary monitor's DPI settings.
+    fn get_scale_factor() -> f64 {
+        Self::ensure_dpi_awareness();
+        unsafe {
+            let h_monitor = MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTONEAREST);
+            Self::get_scale_for_hmonitor(h_monitor)
+        }
+    }
+
+    /// Retrieves the current cursor position in global physical coordinates.
+    /// It attempts to use `GetCursorPos` for high precision, falling back to `GetMessagePos`
+    /// if the direct call fails. Coordinates are handled as `i16` to correctly
+    /// interpret negative values in multi-monitor setups.
+    fn get_cursor_position() -> Option<(f64, f64)> {
+        Self::ensure_dpi_awareness();
+        let mut pt = POINT::default();
+        unsafe {
+            if GetCursorPos(&mut pt).is_ok() {
+                Some((pt.x as f64, pt.y as f64))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Gets the physical resolution (width, height) of the primary screen.
+    fn get_primary_screen_size() -> (f64, f64) {
+        Self::ensure_dpi_awareness();
+        unsafe {
+            (
+                GetSystemMetrics(SM_CXSCREEN) as f64,
+                GetSystemMetrics(SM_CYSCREEN) as f64,
+            )
+        }
+    }
+
+    fn get_virtual_screen_size() -> (f64, f64) {
+        let (_, _, w, h) = Self::get_virtual_screen_bounds();
+        (w as f64, h as f64)
+    }
+
+    /// Returns the virtual screen boundary across all monitors.
+    /// (x, y, width, height) in logical units
+    fn get_virtual_screen_bounds() -> (f64, f64, f64, f64) {
+        Self::ensure_dpi_awareness();
+        unsafe {
+            let vx = GetSystemMetrics(SM_XVIRTUALSCREEN) as f64;
+            let vy = GetSystemMetrics(SM_YVIRTUALSCREEN) as f64;
+            let vw = GetSystemMetrics(SM_CXVIRTUALSCREEN) as f64;
+            let vh = GetSystemMetrics(SM_CYVIRTUALSCREEN) as f64;
+            (vx, vy, vw, vh)
+        }
+    }
+
+    /// Enumerates all connected monitors and retrieves their physical properties.
+    fn get_available_monitors() -> Vec<MonitorInfo> {
+        Self::ensure_dpi_awareness();
+        let mut monitors = Vec::new();
+        unsafe {
+            let _ = EnumDisplayMonitors(
+                None,
+                None,
+                Some(monitor_enum_proc),
+                LPARAM(&mut monitors as *mut _ as isize),
+            );
+        }
+        monitors
+    }
+
+    /// Identifies and returns the primary monitor info if available.
+    fn get_primary_monitor() -> Option<MonitorInfo> {
+        Self::get_available_monitors()
+            .into_iter()
+            .find(|m| m.is_primary)
+    }
+
+    /// Finds the monitor that currently contains the mouse cursor.
+    fn get_current_monitor() -> Option<MonitorInfo> {
+        Self::get_cursor_position()
+            .map(|(x, y)| Self::get_monitor_from_point(x, y))
+            .unwrap_or(None)
+    }
+
+    /// Determines which monitor contains the specified global physical point.
+    fn get_monitor_from_point(x: f64, y: f64) -> Option<MonitorInfo> {
+        Self::get_available_monitors().into_iter().find(|m| {
+            x >= m.offset.0 as f64
+                && x < m.offset.0 as f64 + m.size.0 as f64
+                && y >= m.offset.1 as f64
+                && y < m.offset.1 as f64 + m.size.1 as f64
+        })
+    }
+}
+
 // private functions
-impl Display {
+impl PlatformDisplay {
     fn ensure_dpi_awareness() {
         DPI_INIT.call_once(|| unsafe {
             // Set awareness to Per-Monitor V2 for modern Windows 10/11 behavior
@@ -48,103 +145,6 @@ impl Display {
         } else {
             dpi_x as f64 / USER_DEFAULT_SCREEN_DPI as f64
         }
-    }
-}
-
-// public functions
-impl Display {
-    /// Returns the UI scale factor of the primary monitor.
-    /// This is a convenience method that references the primary monitor's DPI settings.
-    pub fn get_scale_factor() -> f64 {
-        Self::ensure_dpi_awareness();
-        unsafe {
-            let h_monitor = MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTONEAREST);
-            Self::get_scale_for_hmonitor(h_monitor)
-        }
-    }
-
-    /// Retrieves the current cursor position in global physical coordinates.
-    /// It attempts to use `GetCursorPos` for high precision, falling back to `GetMessagePos`
-    /// if the direct call fails. Coordinates are handled as `i16` to correctly
-    /// interpret negative values in multi-monitor setups.
-    pub fn get_cursor_position() -> Option<(f64, f64)> {
-        Self::ensure_dpi_awareness();
-        let mut pt = POINT::default();
-        unsafe {
-            if GetCursorPos(&mut pt).is_ok() {
-                Some((pt.x as f64, pt.y as f64))
-            } else {
-                None
-            }
-        }
-    }
-
-    /// Gets the physical resolution (width, height) of the primary screen.
-    pub fn get_primary_screen_size() -> (f64, f64) {
-        Self::ensure_dpi_awareness();
-        unsafe {
-            (
-                GetSystemMetrics(SM_CXSCREEN) as f64,
-                GetSystemMetrics(SM_CYSCREEN) as f64,
-            )
-        }
-    }
-
-    pub fn get_virtual_screen_size() -> (f64, f64) {
-        let (_, _, w, h) = Self::get_virtual_screen_bounds();
-        (w as f64, h as f64)
-    }
-
-    /// Returns the virtual screen boundary across all monitors.
-    /// (x, y, width, height) in logical units
-    pub fn get_virtual_screen_bounds() -> (f64, f64, f64, f64) {
-        Self::ensure_dpi_awareness();
-        unsafe {
-            let vx = GetSystemMetrics(SM_XVIRTUALSCREEN) as f64;
-            let vy = GetSystemMetrics(SM_YVIRTUALSCREEN) as f64;
-            let vw = GetSystemMetrics(SM_CXVIRTUALSCREEN) as f64;
-            let vh = GetSystemMetrics(SM_CYVIRTUALSCREEN) as f64;
-            (vx, vy, vw, vh)
-        }
-    }
-
-    /// Enumerates all connected monitors and retrieves their physical properties.
-    pub fn get_available_monitors() -> Vec<MonitorInfo> {
-        Self::ensure_dpi_awareness();
-        let mut monitors = Vec::new();
-        unsafe {
-            let _ = EnumDisplayMonitors(
-                None,
-                None,
-                Some(monitor_enum_proc),
-                LPARAM(&mut monitors as *mut _ as isize),
-            );
-        }
-        monitors
-    }
-
-    /// Identifies and returns the primary monitor info if available.
-    pub fn get_primary_monitor() -> Option<MonitorInfo> {
-        Self::get_available_monitors()
-            .into_iter()
-            .find(|m| m.is_primary)
-    }
-
-    /// Finds the monitor that currently contains the mouse cursor.
-    pub fn get_current_monitor() -> Option<MonitorInfo> {
-        Self::get_cursor_position()
-            .map(|(x, y)| Self::get_monitor_from_point(x, y))
-            .unwrap_or(None)
-    }
-
-    /// Determines which monitor contains the specified global physical point.
-    pub fn get_monitor_from_point(x: f64, y: f64) -> Option<MonitorInfo> {
-        Self::get_available_monitors().into_iter().find(|m| {
-            x >= m.offset.0 as f64
-                && x < m.offset.0 as f64 + m.size.0 as f64
-                && y >= m.offset.1 as f64
-                && y < m.offset.1 as f64 + m.size.1 as f64
-        })
     }
 }
 
@@ -171,7 +171,7 @@ extern "system" fn monitor_enum_proc(
             let offset = (r.left as f64, r.top as f64);
             let size = ((r.right - r.left) as f64, (r.bottom - r.top) as f64);
 
-            let scale_factor = Display::get_scale_for_hmonitor(hmonitor);
+            let scale_factor = PlatformDisplay::get_scale_for_hmonitor(hmonitor);
             monitors.push(MonitorInfo {
                 name,
                 is_primary: (info.monitorInfo.dwFlags & MONITORINFOF_PRIMARY) != 0,

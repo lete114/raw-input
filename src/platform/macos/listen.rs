@@ -3,24 +3,26 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use core_graphics::event::{CGEvent, CGEventField, CGEventType, EventField};
 
 use crate::{
-    Listen,
     dispatcher::{CALLBACKS, NEXT_ID, Status, Subscriber, dispatch, remove_all},
     event::{Event, MouseButton, Point},
     key::KeyCode,
-    platform::macos::{
-        common::{
-            IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON,
-            LISTEN_MOUSE_MOVE, LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state,
+    platform::{
+        PlatformListen, ListenImpl,
+        macos::{
+            common::{
+                IS_LISTEN_RUNNING, LISTEN_FLAG, LISTEN_KEYBOARD, LISTEN_MOUSE_BUTTON,
+                LISTEN_MOUSE_MOVE, LISTEN_MOUSE_WHEEL, LISTENS_ALL, update_state,
+            },
+            keycode::code_to_key,
         },
-        keycode::code_to_key,
     },
     subscription::SubscriptionHandle,
 };
 
 static LAST_FLAGS: AtomicU64 = AtomicU64::new(0);
 
-impl Listen {
-    pub fn start() {
+impl ListenImpl for PlatformListen {
+    fn start() {
         if Self::is_run() {
             return;
         }
@@ -28,41 +30,41 @@ impl Listen {
         LISTEN_FLAG.store(LISTENS_ALL, Ordering::SeqCst);
     }
 
-    pub fn is_runing() -> bool {
+    fn is_runing() -> bool {
         IS_LISTEN_RUNNING.load(Ordering::SeqCst)
     }
 
-    pub fn pause() {
+    fn pause() {
         IS_LISTEN_RUNNING.store(false, Ordering::SeqCst);
     }
 
-    pub fn resume() {
+    fn resume() {
         IS_LISTEN_RUNNING.store(true, Ordering::SeqCst);
     }
 
-    pub fn stop() {
+    fn stop() {
         LISTEN_FLAG.store(0, Ordering::SeqCst);
         Self::pause();
         Self::unsubscribe_all();
     }
 
-    pub fn mouse_move(enable: bool) {
+    fn mouse_move(enable: bool) {
         update_state(&LISTEN_FLAG, LISTEN_MOUSE_MOVE, enable);
     }
 
-    pub fn mouse_wheel(enable: bool) {
+    fn mouse_wheel(enable: bool) {
         update_state(&LISTEN_FLAG, LISTEN_MOUSE_WHEEL, enable);
     }
 
-    pub fn mouse_button(enable: bool) {
+    fn mouse_button(enable: bool) {
         update_state(&LISTEN_FLAG, LISTEN_MOUSE_BUTTON, enable);
     }
 
-    pub fn keyboard(enable: bool) {
+    fn keyboard(enable: bool) {
         update_state(&LISTEN_FLAG, LISTEN_KEYBOARD, enable);
     }
 
-    pub fn subscribe<F>(callback: F) -> SubscriptionHandle
+    fn subscribe<F>(callback: F) -> SubscriptionHandle
     where
         F: Fn(Event) + Send + Sync + 'static,
     {
@@ -77,12 +79,12 @@ impl Listen {
         SubscriptionHandle { id }
     }
 
-    pub fn unsubscribe_all() {
+    fn unsubscribe_all() {
         remove_all();
     }
 }
 
-impl Listen {
+impl PlatformListen {
     fn is_run() -> bool {
         IS_LISTEN_RUNNING
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
