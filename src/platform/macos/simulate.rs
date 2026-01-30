@@ -1,10 +1,11 @@
 use crate::platform::macos::keycode::key_to_code;
-use crate::{Event, Key, MouseButton, Simulate};
+use crate::platform::{PlatformSimulate, SimulateImpl};
+use crate::{Event, Key, MouseButton};
 use core_graphics::event::{CGEvent, CGEventType, CGKeyCode, CGMouseButton, ScrollEventUnit};
 use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
 
-impl Simulate {
-    pub fn simulate(event: Event) {
+impl SimulateImpl for PlatformSimulate {
+    fn simulate(event: Event) {
         match event {
             Event::MouseMove { delta, .. } => Self::mouse_move(delta.x, delta.y),
             Event::MouseWheel { delta, .. } => Self::mouse_wheel(delta.x, delta.y),
@@ -15,7 +16,7 @@ impl Simulate {
         }
     }
 
-    pub fn mouse_move(dx: f64, dy: f64) {
+    fn mouse_move(dx: f64, dy: f64) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
         if let Ok(event) = CGEvent::new(source) {
             let cur_pos = event.location();
@@ -25,7 +26,7 @@ impl Simulate {
         }
     }
 
-    pub fn mouse_move_to(x: f64, y: f64) {
+    fn mouse_move_to(x: f64, y: f64) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
         let pos = core_graphics::geometry::CGPoint::new(x, y);
 
@@ -39,7 +40,7 @@ impl Simulate {
         }
     }
 
-    pub fn mouse_wheel(dx: f64, dy: f64) {
+    fn mouse_wheel(dx: f64, dy: f64) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
         if let Ok(event) =
             CGEvent::new_scroll_event(source, ScrollEventUnit::PIXEL, 2, dy as i32, dx as i32, 0)
@@ -48,7 +49,7 @@ impl Simulate {
         }
     }
 
-    pub fn mouse_button(button: MouseButton, down: bool) {
+    fn mouse_button(button: MouseButton, down: bool) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
 
         let cur_event = CGEvent::new(source.clone()).unwrap();
@@ -81,7 +82,7 @@ impl Simulate {
         }
     }
 
-    pub fn keyboard(key: Key, down: bool) {
+    fn keyboard(key: Key, down: bool) {
         let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState).unwrap();
 
         let key_code = match key_to_code(key) {

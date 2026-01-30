@@ -10,9 +10,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WM_SYSKEYUP, WM_XBUTTONDOWN, WM_XBUTTONUP,
 };
 
-use crate::{
-    Grab,
-    platform::windows::common::{
+use crate::platform::{
+    GrabImpl, PlatformGrab,
+    windows::common::{
         GRAB_ALL, GRAB_FLAG, GRAB_KEYBOARD, GRAB_MOUSE_BUTTON, GRAB_MOUSE_MOVE, GRAB_MOUSE_WHEEL,
         IS_GRAB_RUNNING, update_state,
     },
@@ -21,8 +21,8 @@ use crate::{
 pub static MOUSE_HOOK: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 pub static KEYBOARD_HOOK: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 
-impl Grab {
-    pub fn start() {
+impl GrabImpl for PlatformGrab {
+    fn start() {
         if Self::is_run() {
             return;
         }
@@ -30,41 +30,41 @@ impl Grab {
         GRAB_FLAG.fetch_or(GRAB_ALL, Ordering::SeqCst);
     }
 
-    pub fn is_runing() -> bool {
+    fn is_runing() -> bool {
         IS_GRAB_RUNNING.load(Ordering::SeqCst)
     }
 
-    pub fn pause() {
+    fn pause() {
         IS_GRAB_RUNNING.store(false, Ordering::SeqCst);
     }
 
-    pub fn resume() {
+    fn resume() {
         IS_GRAB_RUNNING.store(true, Ordering::SeqCst);
     }
 
-    pub fn stop() {
+    fn stop() {
         Self::pause();
         GRAB_FLAG.store(0, Ordering::SeqCst);
     }
 
-    pub fn mouse_move(enable: bool) {
+    fn mouse_move(enable: bool) {
         update_state(&GRAB_FLAG, GRAB_MOUSE_MOVE, enable);
     }
 
-    pub fn mouse_wheel(enable: bool) {
+    fn mouse_wheel(enable: bool) {
         update_state(&GRAB_FLAG, GRAB_MOUSE_WHEEL, enable);
     }
 
-    pub fn mouse_button(enable: bool) {
+    fn mouse_button(enable: bool) {
         update_state(&GRAB_FLAG, GRAB_MOUSE_BUTTON, enable);
     }
 
-    pub fn keyboard(enable: bool) {
+    fn keyboard(enable: bool) {
         update_state(&GRAB_FLAG, GRAB_KEYBOARD, enable);
     }
 }
 
-impl Grab {
+impl PlatformGrab {
     #[inline]
     fn is_run() -> bool {
         IS_GRAB_RUNNING

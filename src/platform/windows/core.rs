@@ -22,21 +22,18 @@ use windows::{
     core::w,
 };
 
-use crate::{
-    Grab, Listen,
-    platform::{
-        Core, CoreError,
-        windows::{
-            common::{GLOBAL_HWND, IS_CORE_RUNNING, IS_GRAB_RUNNING},
-            grab::{KEYBOARD_HOOK, MOUSE_HOOK},
-        },
+use crate::platform::{
+    CoreError, CoreImpl, PlatformCore, PlatformGrab, PlatformListen,
+    windows::{
+        common::{GLOBAL_HWND, IS_CORE_RUNNING, IS_GRAB_RUNNING},
+        grab::{KEYBOARD_HOOK, MOUSE_HOOK},
     },
 };
 
 /// Stores the ID of the thread running the message loop to allow remote shutdown.
 static CORE_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 
-impl Core {
+impl CoreImpl for PlatformCore {
     /// Starts the core engine and blocks the current thread with a Windows message loop.
     ///
     /// Because this function is blocking, you should typically call it in a dedicated thread.
@@ -53,7 +50,7 @@ impl Core {
     ///     }
     /// });
     /// ```
-    pub fn start() -> Result<(), CoreError> {
+    fn start() -> Result<(), CoreError> {
         // Ensure only one instance is running
         if Self::is_run() {
             return Ok(());
@@ -87,20 +84,20 @@ impl Core {
         Ok(())
     }
 
-    pub fn is_runing() -> bool {
+    fn is_runing() -> bool {
         IS_CORE_RUNNING.load(Ordering::SeqCst)
     }
 
-    pub fn pause() {
+    fn pause() {
         IS_CORE_RUNNING.store(false, Ordering::SeqCst);
     }
 
-    pub fn resume() {
+    fn resume() {
         IS_CORE_RUNNING.store(true, Ordering::SeqCst);
     }
 
     /// Stops the core engine, unhooks all listeners, and terminates the message loop.
-    pub fn stop() {
+    fn stop() {
         Self::pause();
 
         // Remove Windows Hooks
@@ -125,7 +122,7 @@ impl Core {
     }
 }
 
-impl Core {
+impl PlatformCore {
     /// Atomic check-and-set to ensure the core starts only once.
     #[inline]
     fn is_run() -> bool {
@@ -250,7 +247,7 @@ extern "system" fn hook_event_callback(code: i32, wparam: WPARAM, lparam: LPARAM
     // HC_ACTION means the hook is processing an actual input event
     if code == HC_ACTION as i32 {
         // Dispatch the event to the Listen module for monitoring
-        Listen::handle(wparam, lparam);
+        PlatformListen::handle(wparam, lparam);
 
         // If the 'Grab' (interception) feature is active, check if we should block this event
         if !IS_GRAB_RUNNING.load(Ordering::Relaxed) {
@@ -258,7 +255,7 @@ extern "system" fn hook_event_callback(code: i32, wparam: WPARAM, lparam: LPARAM
         }
 
         let msg = wparam.0 as u32;
-        if Grab::should_block(msg) {
+        if PlatformGrab::should_block(msg) {
             // Returning LRESULT(1) consumes the event and prevents it from reaching other apps
             return LRESULT(1);
         }
@@ -277,7 +274,7 @@ extern "system" fn listen_mouse_move_event_callback(
 ) -> LRESULT {
     if msg == WM_INPUT {
         // Raw Input provides relative mouse movement (deltas)
-        let is_handle = Listen::handle_mouse_move(lparam);
+        let is_handle = PlatformListen::handle_mouse_move(lparam);
         if is_handle {
             return LRESULT(0);
         }
