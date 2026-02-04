@@ -66,7 +66,7 @@ impl PlatformCore {
         let mut devices = Vec::new();
 
         let entries = fs::read_dir("/dev/input")
-            .map_err(|_| CoreError::LinuxMissingDisplayError)?;
+            .map_err(|_| CoreError::LinuxKeyboardError)?;
 
         for entry in entries.flatten() {
             let path = entry.path();

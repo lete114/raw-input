@@ -1,3 +1,8 @@
+// NOTE: Event grabbing on Linux requires EVIOCGRAB ioctl at the device level,
+// which exclusively captures input from the device. This implementation provides
+// the grab API interface but does not perform actual event blocking. Full grab
+// support would require calling ioctl(fd, EVIOCGRAB, 1) on each input device.
+
 use std::sync::atomic::Ordering;
 
 use evdev::{InputEventKind, Key, RelativeAxisType};

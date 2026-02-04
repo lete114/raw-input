@@ -148,23 +148,37 @@ fn get_x11_scale_factor() -> Option<f64> {
     let (conn, screen_num) = x11rb::connect(None).ok()?;
     let screen = &conn.setup().roots[screen_num];
 
-    let atom = conn
-        .intern_atom(false, b"Xft.dpi")
+    // Get RESOURCE_MANAGER atom which contains Xft.dpi setting
+    let rm_atom = conn
+        .intern_atom(false, b"RESOURCE_MANAGER")
+        .ok()?
+        .reply()
+        .ok()?
+        .atom;
+
+    // Get STRING atom for property type
+    let string_atom = conn
+        .intern_atom(false, b"STRING")
         .ok()?
         .reply()
         .ok()?
         .atom;
 
     let xrdb = conn
-        .get_property(false, screen.root, atom, 0u32, 0, 1024)
+        .get_property(false, screen.root, rm_atom, string_atom, 0, 4096)
         .ok()?
         .reply()
         .ok()?;
 
     if !xrdb.value.is_empty() {
-        let dpi_str = String::from_utf8_lossy(&xrdb.value);
-        if let Ok(dpi) = dpi_str.trim().parse::<f64>() {
-            return Some(dpi / 96.0);
+        let resources = String::from_utf8_lossy(&xrdb.value);
+        // Parse xrdb format: "Xft.dpi:\t192\n" or "Xft.dpi: 192\n"
+        for line in resources.lines() {
+            if let Some(rest) = line.strip_prefix("Xft.dpi:") {
+                if let Ok(dpi) = rest.trim().parse::<f64>() {
+                    return Some(dpi / 96.0);
+                }
+            }
         }
     }
 

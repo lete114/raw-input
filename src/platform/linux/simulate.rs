@@ -72,23 +72,34 @@ fn ensure_device() -> bool {
     let fd = file.as_raw_fd();
 
     unsafe {
-        libc::ioctl(fd, UI_SET_EVBIT, EV_KEY as libc::c_int);
-        libc::ioctl(fd, UI_SET_EVBIT, EV_REL as libc::c_int);
-        libc::ioctl(fd, UI_SET_EVBIT, EV_SYN as libc::c_int);
+        if libc::ioctl(fd, UI_SET_EVBIT, EV_KEY as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_EVBIT, EV_REL as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_EVBIT, EV_SYN as libc::c_int) < 0
+        {
+            return false;
+        }
 
         for key in 1..256 {
-            libc::ioctl(fd, UI_SET_KEYBIT, key as libc::c_int);
+            if libc::ioctl(fd, UI_SET_KEYBIT, key as libc::c_int) < 0 {
+                return false;
+            }
         }
-        libc::ioctl(fd, UI_SET_KEYBIT, BTN_LEFT as libc::c_int);
-        libc::ioctl(fd, UI_SET_KEYBIT, BTN_RIGHT as libc::c_int);
-        libc::ioctl(fd, UI_SET_KEYBIT, BTN_MIDDLE as libc::c_int);
-        libc::ioctl(fd, UI_SET_KEYBIT, BTN_SIDE as libc::c_int);
-        libc::ioctl(fd, UI_SET_KEYBIT, BTN_EXTRA as libc::c_int);
+        if libc::ioctl(fd, UI_SET_KEYBIT, BTN_LEFT as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_KEYBIT, BTN_RIGHT as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_KEYBIT, BTN_MIDDLE as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_KEYBIT, BTN_SIDE as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_KEYBIT, BTN_EXTRA as libc::c_int) < 0
+        {
+            return false;
+        }
 
-        libc::ioctl(fd, UI_SET_RELBIT, REL_X as libc::c_int);
-        libc::ioctl(fd, UI_SET_RELBIT, REL_Y as libc::c_int);
-        libc::ioctl(fd, UI_SET_RELBIT, REL_WHEEL as libc::c_int);
-        libc::ioctl(fd, UI_SET_RELBIT, REL_HWHEEL as libc::c_int);
+        if libc::ioctl(fd, UI_SET_RELBIT, REL_X as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_RELBIT, REL_Y as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_RELBIT, REL_WHEEL as libc::c_int) < 0
+            || libc::ioctl(fd, UI_SET_RELBIT, REL_HWHEEL as libc::c_int) < 0
+        {
+            return false;
+        }
 
         let mut setup: UinputSetup = mem::zeroed();
         setup.id.bustype = 0x03;
