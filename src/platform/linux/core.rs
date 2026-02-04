@@ -1,10 +1,9 @@
 use std::fs;
 use std::os::fd::{AsFd, AsRawFd};
-use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::Mutex;
 
-use evdev::{Device, EventType, InputEventKind, Key};
+use evdev::{Device, InputEventKind, Key};
 
 use crate::platform::{
     CoreError, CoreImpl, GrabImpl, ListenImpl, PlatformCore, PlatformGrab, PlatformListen,
@@ -153,18 +152,3 @@ impl PlatformCore {
     }
 }
 
-pub fn find_device_path(name_hint: &str) -> Option<PathBuf> {
-    let entries = fs::read_dir("/dev/input").ok()?;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if !path.to_string_lossy().contains("event") {
-            continue;
-        }
-        if let Ok(device) = Device::open(&path) {
-            if device.name().map_or(false, |n| n.contains(name_hint)) {
-                return Some(path);
-            }
-        }
-    }
-    None
-}
