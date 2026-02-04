@@ -80,5 +80,5 @@ fn main() {
 | OS | Status | Notes |
 | --- | --- | --- |
 | **Windows** | ✅ Supported | Implemented via `SetWindowsHookEx` and `Raw Input` API. |
-| **macOS** | ✅ Supported | Will be based on `CGEventTap`. |
-| **Linux** | 🚧 Planned | Will be based on `XRecord` or `evdev`. |
+| **macOS** | ✅ Supported | Implemented via `CGEventTap`. |
+| **Linux** | ✅ Supported | Implemented via `evdev` and `uinput`. Requires X11 for display functions. |
