@@ -42,6 +42,11 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
     "NSScreen",
 ] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+evdev = "0.12"
+libc = "0.2"
+x11rb = { version = "0.13", features = ["randr", "xfixes"] }
+
 [dev-dependencies]
 dpi = "0.1.2"
 serial_test = "3.2.0"
