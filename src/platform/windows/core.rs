@@ -113,7 +113,7 @@ impl CoreImpl for PlatformCore {
         }
 
         // Destroy the message-only window
-        let hwnd = GLOBAL_HWND.load(Ordering::SeqCst);
+        let hwnd = GLOBAL_HWND.swap(null_mut(),Ordering::SeqCst);
         if !hwnd.is_null() {
             unsafe {
                 let _ = PostMessageW(Some(HWND(hwnd)), WM_QUIT, WPARAM(0), LPARAM(0));
