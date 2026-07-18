@@ -124,10 +124,8 @@ impl PlatformListen {
                     if (state & LISTEN_MOUSE_WHEEL) == 0 {
                         return;
                     }
-                } else {
-                    if (state & LISTEN_MOUSE_BUTTON) == 0 {
-                        return;
-                    }
+                } else if (state & LISTEN_MOUSE_BUTTON) == 0 {
+                    return;
                 }
 
                 // Cast LPARAM to Low-Level Mouse Hook structure
@@ -196,7 +194,7 @@ impl PlatformListen {
                 // Cast LPARAM to Low-Level Keyboard Hook structure
                 let kb = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
                 let code: KeyCode = utils::get_code(kb);
-                let key = code_to_key(code.into());
+                let key = code_to_key(code);
                 let code = Some(code);
 
                 if msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN {

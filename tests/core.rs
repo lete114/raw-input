@@ -15,21 +15,20 @@ mod core_tests {
         Listen::start();
         Listen::subscribe(|event| {
             println!("event: {:?}", event);
-            match event {
-                Event::KeyUp { key, .. } => {
-                    if key == Key::Escape {
-                        println!("stop ...");
-                        std::process::exit(0);
-                    }
+            if let Event::KeyUp { key, .. } = event {
+                if key == Key::Escape {
+                    println!("stop ...");
+                    std::process::exit(0);
                 }
-                _ => {}
             }
         });
 
         // thread::sleep(Duration::from_millis(5000));
         // std::process::exit(0);
 
-        loop {}
+        loop {
+            thread::sleep(Duration::from_millis(100));
+        }
     }
 
     /// Test the full start-to-stop lifecycle of the Core.

@@ -145,3 +145,43 @@ keymap! {
     IntlYen => 0x5D,
     IntlRo => 0x5E,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_key_to_code_known() {
+        assert_eq!(key_to_code(Key::KeyA), Some(0x00));
+        assert_eq!(key_to_code(Key::Escape), Some(0x35));
+        assert_eq!(key_to_code(Key::Enter), Some(0x24));
+        assert_eq!(key_to_code(Key::Space), Some(0x31));
+    }
+
+    #[test]
+    fn test_key_to_code_unknown_returns_none() {
+        assert_eq!(key_to_code(Key::Unidentified), None);
+    }
+
+    #[test]
+    fn test_code_to_key_known() {
+        assert_eq!(code_to_key(0x00), Key::KeyA);
+        assert_eq!(code_to_key(0x35), Key::Escape);
+        assert_eq!(code_to_key(0x24), Key::Enter);
+    }
+
+    #[test]
+    fn test_code_to_key_unknown_returns_default() {
+        assert_eq!(code_to_key(0xFF), Key::Unidentified);
+    }
+
+    #[test]
+    fn test_key_to_code_roundtrip() {
+        let keys = [Key::KeyA, Key::Escape, Key::Enter, Key::Space, Key::Tab];
+        for key in &keys {
+            if let Some(code) = key_to_code(*key) {
+                assert_eq!(&code_to_key(code), key);
+            }
+        }
+    }
+}

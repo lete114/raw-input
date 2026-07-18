@@ -202,3 +202,66 @@ keymap! {
     IntlRo, 0x00E2, 0x73,
     IntlYen, 0x00DC, 0x7D
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_key_to_code_known() {
+        assert_eq!(key_to_code(Key::KeyA), Some(65));
+        assert_eq!(key_to_code(Key::Escape), Some(27));
+        assert_eq!(key_to_code(Key::Enter), Some(13));
+        assert_eq!(key_to_code(Key::Space), Some(32));
+    }
+
+    #[test]
+    fn test_key_to_code_unknown_returns_none() {
+        assert_eq!(key_to_code(Key::Unidentified), None);
+    }
+
+    #[test]
+    fn test_code_to_key_known() {
+        assert_eq!(code_to_key(65), Key::KeyA);
+        assert_eq!(code_to_key(27), Key::Escape);
+        assert_eq!(code_to_key(13), Key::Enter);
+    }
+
+    #[test]
+    fn test_code_to_key_unknown_returns_default() {
+        assert_eq!(code_to_key(0), Key::default());
+        assert_eq!(code_to_key(9999), Key::default());
+    }
+
+    #[test]
+    fn test_key_to_scancode_known() {
+        assert_eq!(key_to_scancode(Key::KeyA), Some(0x1E));
+        assert_eq!(key_to_scancode(Key::Escape), Some(0x01));
+    }
+
+    #[test]
+    fn test_key_to_scancode_unknown_returns_none() {
+        assert_eq!(key_to_scancode(Key::Unidentified), None);
+    }
+
+    #[test]
+    fn test_get_win_codes_known_key() {
+        let result = get_win_codes(Key::KeyA);
+        assert_eq!(result, Some((65, 0x1E)));
+    }
+
+    #[test]
+    fn test_get_win_codes_unidentified_returns_none() {
+        assert_eq!(get_win_codes(Key::Unidentified), None);
+    }
+
+    #[test]
+    fn test_key_to_code_roundtrip() {
+        let keys = [Key::KeyA, Key::Escape, Key::Enter, Key::Space, Key::Tab];
+        for key in &keys {
+            if let Some(code) = key_to_code(*key) {
+                assert_eq!(&code_to_key(code), key);
+            }
+        }
+    }
+}

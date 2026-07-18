@@ -14,7 +14,7 @@ pub type KeyCode = u32;
 /// These represent key positions, not produced characters.
 /// 
 /// Layout- and locale-independent.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum Key {
     // --- Writing System Keys ---
@@ -150,11 +150,8 @@ pub enum Key {
     // Undo,
     // Hiragana,
     // Katakana,
+    #[default]
     Unidentified,
 }
 
-impl Default for Key {
-    fn default() -> Self {
-        Key::Unidentified
-    }
-}
+

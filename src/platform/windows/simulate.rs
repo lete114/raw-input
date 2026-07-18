@@ -172,7 +172,7 @@ impl InputBuilder {
 
         self.push_keyboard(KEYBDINPUT {
             wVk: VIRTUAL_KEY(w_vk),
-            wScan: w_scan as u16,
+            wScan: w_scan,
             dwFlags: KEYBD_EVENT_FLAGS(flags),
             ..Default::default()
         });
