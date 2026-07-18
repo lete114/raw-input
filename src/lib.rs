@@ -18,35 +18,33 @@
 //!
 //! use raw_input::{Core, Listen, Event};
 //!
-//! fn main() {
-//!     // 1. Start the core engine in a background thread
-//!     // (Crucial for processing Windows message loops)
-//!     thread::spawn(|| {
-//!         Core::start().expect("Failed to start raw-input core");
-//!     });
+//! // 1. Start the core engine in a background thread
+//! // (Crucial for processing Windows message loops)
+//! thread::spawn(|| {
+//!     Core::start().expect("Failed to start raw-input core");
+//! });
 //!
-//!     // 2. Subscribe to global events
-//!     Listen::start();
-//!     let handle = Listen::subscribe(|event| {
-//!         match event {
-//!             Event::KeyDown { key } => println!("Key pressed: {:?}", key),
-//!             Event::MouseMove { delta } => println!("Mouse moved by: {}, {}", delta.x, delta.y),
-//!             _ => {},
-//!         }
-//!     });
+//! // 2. Subscribe to global events
+//! Listen::start();
+//! let handle = Listen::subscribe(|event| {
+//!     match event {
+//!         Event::KeyDown { key } => println!("Key pressed: {:?}", key),
+//!         Event::MouseMove { delta } => println!("Mouse moved by: {}, {}", delta.x, delta.y),
+//!         _ => {},
+//!     }
+//! });
 //!
-//!     // 3. Manage the subscription lifecycle
-//!     thread::sleep(Duration::from_secs(5));
-//!     handle.pause();    // Stop receiving events temporarily
+//! // 3. Manage the subscription lifecycle
+//! thread::sleep(Duration::from_secs(5));
+//! handle.pause();    // Stop receiving events temporarily
 //!
-//!     thread::sleep(Duration::from_secs(2));
-//!     handle.resume();   // Start receiving events again
+//! thread::sleep(Duration::from_secs(2));
+//! handle.resume();   // Start receiving events again
 //!
-//!     thread::sleep(Duration::from_secs(2));
-//!     handle.unsubscribe(); // Permanently remove the listener
-//!     Listen::stop(); // Stop Listen
-//!     Core::stop()
-//! }
+//! thread::sleep(Duration::from_secs(2));
+//! handle.unsubscribe(); // Permanently remove the listener
+//! Listen::stop(); // Stop Listen
+//! Core::stop();
 //! ```
 
 mod dispatcher;

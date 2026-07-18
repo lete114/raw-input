@@ -102,10 +102,10 @@ impl DisplayImpl for PlatformDisplay {
 
     fn get_monitor_from_point(x: f64, y: f64) -> Option<MonitorInfo> {
         Self::get_available_monitors().into_iter().find(|m| {
-            x >= m.offset.0 as f64
-                && x < m.offset.0 as f64 + m.size.0 as f64
-                && y >= m.offset.1 as f64
-                && y < m.offset.1 as f64 + m.size.1 as f64
+            x >= m.offset.0
+                && x < m.offset.0 + m.size.0
+                && y >= m.offset.1
+                && y < m.offset.1 + m.size.1
         })
     }
 }
@@ -129,7 +129,7 @@ impl PlatformDisplay {
                         CGDisplayCreateUUIDFromDisplayID(other_native_id as CGDirectDisplayID);
 
                     if target_uuid == other_uuid {
-                        scale = screen.backingScaleFactor() as f64;
+                        scale = screen.backingScaleFactor();
                         if !other_uuid.is_null() {
                             CFRelease(other_uuid as _);
                         }

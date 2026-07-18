@@ -43,3 +43,109 @@ impl SubscriptionHandle {
         CALLBACKS.remove(&self.id);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serial_test::serial;
+
+    use super::*;
+    use crate::dispatcher::{NEXT_ID, Subscriber, dispatch, remove_all};
+    use crate::event::Event;
+    use crate::key::Key;
+
+    fn dummy_event() -> Event {
+        Event::KeyDown { key: Key::Escape, code: None }
+    }
+
+    fn insert_callback() -> SubscriptionHandle {
+        let id = NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        CALLBACKS.insert(id, Subscriber {
+            status: Status::Active,
+            callback: Box::new(|_| {}),
+        });
+        SubscriptionHandle { id }
+    }
+
+    #[serial]
+    #[test]
+    fn test_subscription_pause_resume_unsubscribe() {
+        remove_all();
+        let handle = insert_callback();
+
+        // Initially active
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Active
+        );
+
+        // Pause
+        handle.pause();
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Paused
+        );
+
+        // Resume
+        handle.resume();
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Active
+        );
+
+        // Unsubscribe
+        let saved_id = handle.id;
+        handle.unsubscribe();
+        assert!(CALLBACKS.get(&saved_id).is_none());
+
+        remove_all();
+    }
+
+    #[serial]
+    #[test]
+    fn test_subscription_unsubscribe_stops_dispatch() {
+        remove_all();
+        let called = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let called_clone = called.clone();
+        let id = NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        CALLBACKS.insert(id, Subscriber {
+            status: Status::Active,
+            callback: Box::new(move |_| { called_clone.store(true, std::sync::atomic::Ordering::SeqCst); }),
+        });
+        let handle = SubscriptionHandle { id };
+
+        // Unsubscribe then dispatch
+        handle.unsubscribe();
+        dispatch(dummy_event());
+        assert!(!called.load(std::sync::atomic::Ordering::SeqCst), "unsubscribed callback should not be called");
+
+        remove_all();
+    }
+
+    #[serial]
+    #[test]
+    fn test_subscription_pause_resume_toggle() {
+        remove_all();
+        let handle = insert_callback();
+
+        handle.pause();
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Paused
+        );
+
+        handle.resume();
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Active
+        );
+
+        // Pause again
+        handle.pause();
+        assert_eq!(
+            CALLBACKS.get(&handle.id).unwrap().status,
+            Status::Paused
+        );
+
+        remove_all();
+    }
+}

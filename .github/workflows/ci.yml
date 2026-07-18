@@ -15,4 +15,5 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --all-targets
-      - run: cargo test --no-run
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --lib

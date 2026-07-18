@@ -69,7 +69,7 @@ impl DisplayImpl for PlatformDisplay {
 
     fn get_virtual_screen_size() -> (f64, f64) {
         let (_, _, w, h) = Self::get_virtual_screen_bounds();
-        (w as f64, h as f64)
+        (w, h)
     }
 
     /// Returns the virtual screen boundary across all monitors.
@@ -117,10 +117,10 @@ impl DisplayImpl for PlatformDisplay {
     /// Determines which monitor contains the specified global physical point.
     fn get_monitor_from_point(x: f64, y: f64) -> Option<MonitorInfo> {
         Self::get_available_monitors().into_iter().find(|m| {
-            x >= m.offset.0 as f64
-                && x < m.offset.0 as f64 + m.size.0 as f64
-                && y >= m.offset.1 as f64
-                && y < m.offset.1 as f64 + m.size.1 as f64
+            x >= m.offset.0
+                && x < m.offset.0 + m.size.0
+                && y >= m.offset.1
+                && y < m.offset.1 + m.size.1
         })
     }
 }
