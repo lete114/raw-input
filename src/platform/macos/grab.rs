@@ -97,3 +97,92 @@ impl PlatformGrab {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serial_test::serial;
+
+    use super::*;
+
+    fn set_state(running: bool, flags: u32) {
+        IS_GRAB_RUNNING.store(running, Ordering::SeqCst);
+        GRAB_FLAG.store(flags, Ordering::SeqCst);
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_returns_false_when_not_running() {
+        set_state(false, GRAB_ALL);
+        assert!(!PlatformGrab::should_block(CGEventType::KeyDown));
+        assert!(!PlatformGrab::should_block(CGEventType::MouseMoved));
+        assert!(!PlatformGrab::should_block(CGEventType::LeftMouseDown));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_returns_false_when_no_flags() {
+        set_state(true, 0);
+        assert!(!PlatformGrab::should_block(CGEventType::KeyDown));
+        assert!(!PlatformGrab::should_block(CGEventType::MouseMoved));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_keyboard_events() {
+        set_state(true, GRAB_KEYBOARD);
+        assert!(PlatformGrab::should_block(CGEventType::KeyDown));
+        assert!(PlatformGrab::should_block(CGEventType::KeyUp));
+        assert!(PlatformGrab::should_block(CGEventType::FlagsChanged));
+        assert!(!PlatformGrab::should_block(CGEventType::MouseMoved));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_mouse_move_events() {
+        set_state(true, GRAB_MOUSE_MOVE);
+        assert!(PlatformGrab::should_block(CGEventType::MouseMoved));
+        assert!(PlatformGrab::should_block(CGEventType::LeftMouseDragged));
+        assert!(PlatformGrab::should_block(CGEventType::RightMouseDragged));
+        assert!(PlatformGrab::should_block(CGEventType::OtherMouseDragged));
+        assert!(!PlatformGrab::should_block(CGEventType::KeyDown));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_mouse_button_events() {
+        set_state(true, GRAB_MOUSE_BUTTON);
+        assert!(PlatformGrab::should_block(CGEventType::LeftMouseDown));
+        assert!(PlatformGrab::should_block(CGEventType::LeftMouseUp));
+        assert!(PlatformGrab::should_block(CGEventType::RightMouseDown));
+        assert!(PlatformGrab::should_block(CGEventType::RightMouseUp));
+        assert!(PlatformGrab::should_block(CGEventType::OtherMouseDown));
+        assert!(PlatformGrab::should_block(CGEventType::OtherMouseUp));
+        assert!(!PlatformGrab::should_block(CGEventType::MouseMoved));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_scroll_wheel() {
+        set_state(true, GRAB_MOUSE_WHEEL);
+        assert!(PlatformGrab::should_block(CGEventType::ScrollWheel));
+        assert!(!PlatformGrab::should_block(CGEventType::KeyDown));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_all_when_all_flags_set() {
+        set_state(true, GRAB_ALL);
+        assert!(PlatformGrab::should_block(CGEventType::KeyDown));
+        assert!(PlatformGrab::should_block(CGEventType::MouseMoved));
+        assert!(PlatformGrab::should_block(CGEventType::LeftMouseDown));
+        assert!(PlatformGrab::should_block(CGEventType::ScrollWheel));
+    }
+
+    #[serial]
+    #[test]
+    fn test_should_block_unknown_event_type() {
+        set_state(true, GRAB_ALL);
+        let unknown = CGEventType::Null;
+        assert!(!PlatformGrab::should_block(unknown));
+    }
+}
