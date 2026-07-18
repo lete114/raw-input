@@ -69,3 +69,54 @@ pub fn update_state(atomic: &AtomicU32, bit: u32, enable: bool) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_update_state_sets_bit() {
+        let flag = AtomicU32::new(0);
+        update_state(&flag, LISTEN_MOUSE_MOVE, true);
+        assert_eq!(flag.load(Ordering::SeqCst), LISTEN_MOUSE_MOVE);
+    }
+
+    #[test]
+    fn test_update_state_clears_bit() {
+        let flag = AtomicU32::new(LISTEN_MOUSE_MOVE);
+        update_state(&flag, LISTEN_MOUSE_MOVE, false);
+        assert_eq!(flag.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn test_update_state_preserves_other_bits() {
+        let flag = AtomicU32::new(LISTEN_MOUSE_BUTTON);
+        update_state(&flag, LISTEN_MOUSE_MOVE, true);
+        assert_eq!(
+            flag.load(Ordering::SeqCst),
+            LISTEN_MOUSE_BUTTON | LISTEN_MOUSE_MOVE
+        );
+    }
+
+    #[test]
+    fn test_update_state_multiple_bits_independent() {
+        let flag = AtomicU32::new(LISTENS_ALL);
+        update_state(&flag, LISTEN_KEYBOARD, false);
+        let expected = LISTEN_MOUSE_MOVE | LISTEN_MOUSE_BUTTON | LISTEN_MOUSE_WHEEL;
+        assert_eq!(flag.load(Ordering::SeqCst), expected);
+    }
+
+    #[test]
+    fn test_update_state_idempotent_set() {
+        let flag = AtomicU32::new(LISTEN_MOUSE_MOVE);
+        update_state(&flag, LISTEN_MOUSE_MOVE, true);
+        assert_eq!(flag.load(Ordering::SeqCst), LISTEN_MOUSE_MOVE);
+    }
+
+    #[test]
+    fn test_update_state_idempotent_clear() {
+        let flag = AtomicU32::new(0);
+        update_state(&flag, LISTEN_MOUSE_MOVE, false);
+        assert_eq!(flag.load(Ordering::SeqCst), 0);
+    }
+}
