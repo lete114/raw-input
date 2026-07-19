@@ -61,7 +61,7 @@ impl PlatformCore {
             .is_err()
     }
 
-    /// Wraps the Win32 SetWindowsHookExW API.
+    /// Wraps the macOS CGEventTap API.
     fn set_hook() -> Result<(), CoreError> {
         let tap = match CGEventTap::new(
             CGEventTapLocation::HID,
