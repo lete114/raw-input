@@ -44,5 +44,4 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-dpi = "0.1.2"
 serial_test = "3.2.0"
